@@ -1,0 +1,47 @@
+{
+	"manifest_version": 2,
+	"name": "tagit",
+	"version": "0.1",
+
+	"applications": {
+		"gecko": {
+			"id": "tagit@d3d.info"
+		}
+	},
+	
+	"permissions": [
+		"storage",
+        	"unlimitedStorage",
+		"webRequest",
+		"webRequestBlocking",
+		"*://*.pikabu.ru/*",
+		"*://pikabu.ru/*"
+	],
+
+	"description": "Allows you to tag everything",
+
+	"icons": {
+		"48": "icons/icon_48.png"
+	},
+
+	"background": {
+		"scripts": ["app/background.js"]
+	},
+
+	"content_scripts": [
+		{
+			"matches": ["*://*.pikabu.ru/*"],
+			"js": ["js/pikabu.ru.js", "js/tags.js"]
+		}
+	],
+	"browser_action": {
+		"browser_style": true,
+		"default_icon": {
+			"16": "logo512.png"
+		}
+	},
+	"options_ui": {
+		"page": "index.html",
+		"browser_style": true
+	}
+}
