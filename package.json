@@ -18,10 +18,11 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "INLINE_RUNTIME_CHUNK=false react-scripts build",
+    "build": "INLINE_RUNTIME_CHUNK=false react-scripts build && cp ./build/static/js/main.*.js ./build/static/js/main.js && cp ./build/static/css/main.*.css ./build/static/css/main.css",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "watch": "npm-watch"
+    "watch": "npm-watch",
+    "rename": "mv ./static/js/main.*.js ./static/js/main.js && mv ./static/css/main.*.css ./static/css/main.css"
   },
   "watch": {
     "build": "src/"
@@ -42,6 +43,7 @@
     ]
   },
   "devDependencies": {
-    "npm-watch": "^0.6.0"
+    "npm-watch": "^0.6.0",
+    "renamer": "^1.1.3"
   }
 }

@@ -7,6 +7,9 @@ import * as react_alert from 'react-alert';
 import {Provider as AlertProvider} from 'react-alert';
 import AlertTemplate from 'react-alert-template-basic';
 
+console.log("index.js is running");
+document.body.style.border = "5px solid red";
+
 const alertOptions = {
     position: react_alert.positions.BOTTOM_RIGHT,
     timeout: 5000,
@@ -22,7 +25,14 @@ const Root = () => (
 
 ReactDOM.render(<Root />, document.getElementById('root'));
 
+const pikabuSaveButtonDialog = document.createElement('div');
+pikabuSaveButtonDialog.id = 'tagit__pikabuSaveButtonDialog';
+document.body.insertBefore(pikabuSaveButtonDialog, document.body.childNodes[0]);
+
+ReactDOM.render(<Root />, document.getElementById('tagit__pikabuSaveButtonDialog'));
+
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.
 // Learn more about service workers: https://bit.ly/CRA-PWA
 serviceWorker.unregister();
+

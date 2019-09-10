@@ -1,47 +1,76 @@
 {
-	"manifest_version": 2,
-	"name": "tagit",
-	"version": "0.1",
+  "short_name": "tagit",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff",
 
-	"applications": {
-		"gecko": {
-			"id": "tagit@d3d.info"
-		}
-	},
-	
-	"permissions": [
-		"storage",
-        	"unlimitedStorage",
-		"webRequest",
-		"webRequestBlocking",
-		"*://*.pikabu.ru/*",
-		"*://pikabu.ru/*"
-	],
+  "/* for the extension */": "",
 
-	"description": "Allows you to tag everything",
-
-	"icons": {
-		"48": "icons/icon_48.png"
-	},
-
-	"background": {
-		"scripts": ["app/background.js"]
-	},
-
-	"content_scripts": [
-		{
-			"matches": ["*://*.pikabu.ru/*"],
-			"js": ["js/pikabu.ru.js", "js/tags.js"]
-		}
-	],
-	"browser_action": {
-		"browser_style": true,
-		"default_icon": {
-			"16": "logo512.png"
-		}
-	},
-	"options_ui": {
-		"page": "index.html",
-		"browser_style": true
-	}
+  "manifest_version": 2,
+  "name": "tagit",
+  "version": "0.1",
+  "applications": {
+    "gecko": {
+      "id": "tagit@d3d.info"
+    }
+  },
+  "permissions": [
+    "storage",
+    "unlimitedStorage",
+    "webRequest",
+    "webRequestBlocking",
+    "*://*.pikabu.ru/*",
+    "*://pikabu.ru/*"
+  ],
+  "description": "Allows you to tag everything",
+  "icons": {
+    "48": "icons/icon_48.png"
+  },
+  "background": {
+    "scripts": [
+      "app/background.js"
+    ]
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.pikabu.ru/*",
+        "*://lib.ru/*"
+      ],
+      "js": [
+        "app/pikabu.ru.js"
+      ],
+      "css": [
+        "static/css/main.css"
+      ]
+    }
+  ],
+  "browser_action": {
+    "browser_style": true,
+    "default_icon": {
+      "16": "logo512.png"
+    }
+  },
+  "options_ui": {
+    "page": "index.html",
+    "browser_style": true
+  }
 }
