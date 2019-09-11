@@ -84,7 +84,8 @@ module.exports = {
     publicUrl: getPublicUrl(resolveApp('package.json')),
     servedPath: getServedPath(resolveApp('package.json')),
     //
-    appPikabuSaveCommentPopupJs: resolveModule(resolveApp, 'src/pikabuSaveCommentPopup'),
+    pikabuSaveCommentPopupJs: resolveModule(resolveApp, 'src/pikabuSaveCommentPopup'),
+    backgroundRPCListenerJs: resolveModule(resolveApp, 'src/backgroundRPCListener'),
 };
 
 

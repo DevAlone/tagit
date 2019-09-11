@@ -1,4 +1,4 @@
-import {Tag, PikabuComment} from '../../models/models';
+import {Tag, PikabuComment} from './models';
 import PouchDB from "pouchdb-browser";
 
 let tags = new PouchDB('tags');
@@ -22,7 +22,7 @@ export async function createTagIfNotExists(name) {
  * @param contentHTML
  * @param contentText
  * @param contentImages
- * @returns {Promise<void>}
+ * @returns {Promise<boolean>} true if was saved to db, false if already existed
  */
 export async function createPikabuCommentIfNotExists(
     id,
@@ -36,7 +36,7 @@ export async function createPikabuCommentIfNotExists(
         console.log("got comment");
         console.log(comment);
         // exists so exit
-        return;
+        return false;
     } catch (err) {
         if (err.hasOwnProperty("status")) {
             if (err.status === 404) {
@@ -51,7 +51,7 @@ export async function createPikabuCommentIfNotExists(
                 });
                 console.log("created a comment");
 
-                return;
+                return true;
             }
         }
         throw err;
@@ -65,10 +65,10 @@ export async function createPikabuCommentIfNotExists(
  */
 export async function getAllTags() {
     return [
-        new Tag(1, "none"),
-        new Tag(2, "fun"),
-        new Tag(2, "science"),
-        new Tag(2, "politics"),
+        new Tag("1", "none"),
+        new Tag("2", "fun"),
+        new Tag("3", "science"),
+        new Tag("4", "politics"),
     ]
 }
 

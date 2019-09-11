@@ -48,7 +48,7 @@
     "postcss-preset-env": "6.7.0",
     "postcss-safe-parser": "4.0.1",
     "pouchdb-browser": "^7.1.1",
-    "react": "^16.9.0",
+    "react": "^16.8.6",
     "react-alert": "^5.5.0",
     "react-alert-template-basic": "^1.0.0",
     "react-app-polyfill": "^1.0.2",

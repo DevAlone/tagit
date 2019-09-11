@@ -4,7 +4,7 @@ import {withRouter, Link} from 'react-router-dom';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import TopBar from './TopBar';
 
-import * as db from "./common/db";
+import * as db from "../models/db";
 import Paper from "@material-ui/core/Paper";
 import Button from "@material-ui/core/Button";
 import {withAlert} from "react-alert";

@@ -15,13 +15,15 @@
     "*://*.pikabu.ru/*",
     "*://pikabu.ru/*"
   ],
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self';",
   "description": "Allows you to tag everything",
   "icons": {
     "48": "icons/icon_48.png"
   },
   "background": {
     "scripts": [
-      "app/background.js"
+      "app/background.js",
+      "static/js/backgroundRPCListener.js"
     ]
   },
   "content_scripts": [
@@ -30,12 +32,11 @@
         "*://*.pikabu.ru/*"
       ],
       "js": [
-        "static/js/0.chunk.js",
-        "static/js/3.chunk.js",
-        "static/js/appPikabuSaveCommentPopupJs.js"
+        "app/fixBugWithRequestAnimationFrame.js",
+        "static/js/pikabuSaveCommentPopup.js"
       ],
       "css": [
-        "static/css/appPikabuSaveCommentPopupJs.css"
+        "static/css/pikabuSaveCommentPopup.css"
       ]
     }
   ],

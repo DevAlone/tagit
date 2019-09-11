@@ -1,40 +1,25 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './pikabuSaveCommentPopup.css';
-import * as react_alert from 'react-alert';
-import {Provider as AlertProvider} from 'react-alert';
-import AlertTemplate from 'react-alert-template-basic';
+import Paper from "@material-ui/core/Paper";
+import Button from "@material-ui/core/Button";
+import * as db from "./models/db";
+import * as react_alert from "react-alert";
+import {Provider as AlertProvider} from "react-alert";
+import AlertTemplate from "react-alert-template-basic";
+import {useAlert} from "react-alert";
+import PikabuSaveCommentPopup from "./components/PikabuSaveCommentPopup";
 
-console.log("pikabuSaveCommentPopup.js is running");
+// TODO: remove
 document.body.style.border = "5px solid red";
-
-const alertOptions = {
-    position: react_alert.positions.BOTTOM_RIGHT,
-    timeout: 5000,
-    offset: '30px',
-    transition: react_alert.transitions.SCALE
-};
 
 class PikabuSaveCommentPopupRoot extends React.Component {
     render() {
         return (
-            <div className={'react-extension'}>
-                <p>Hello From React Extension!</p>
-            </div>
+            <PikabuSaveCommentPopup/>
         )
     }
 }
-
-
-/*
-const Root = () => (
-    <AlertProvider template={AlertTemplate} {...alertOptions}>
-        <div>
-            hello from react extensino!
-        </div>
-    </AlertProvider>
-);
-*/
 
 const pikabuSaveButtonDialog = document.createElement('div');
 pikabuSaveButtonDialog.id = 'tagit__pikabuSaveButtonDialog';
@@ -42,17 +27,7 @@ document.body.appendChild(pikabuSaveButtonDialog);
 
 ReactDOM.render(<PikabuSaveCommentPopupRoot/>, pikabuSaveButtonDialog);
 
-/*function commentNodeToData(commentNode) {
-    return {
-        id: commentNode.getAttribute("data-id"),
-        authorUsername: commentNode.querySelector(".comment__user").getAttribute("data-name"),
-        createdAtDate: commentNode.querySelector(".comment__datetime").getAttribute("datetime"),
-        contentHTML: commentNode.querySelector(".comment__content").innerHTML,
-        contentText: "// TODO: implement",
-        contentImages: Array.from(commentNode.querySelectorAll('.comment-image a')).map(x => x.href),
-    };
-}
-
+/*
 async function tagComment(commentId, tagId) {
     const commentKey = "pikabu:comment__" + commentId;
     const tagKey = "tag__" + tagId;
@@ -94,16 +69,45 @@ async function saveCommentToStorage(id, commentNode) {
 }
  */
 
+function commentNodeToData(commentNode) {
+    return {
+        id: commentNode.getAttribute("data-id"),
+        authorUsername: commentNode.querySelector(".comment__user").getAttribute("data-name"),
+        createdAtDate: commentNode.querySelector(".comment__datetime").getAttribute("datetime"),
+        contentHTML: commentNode.querySelector(".comment__content").innerHTML,
+        contentText: "// TODO: implement",
+        contentImages: Array.from(commentNode.querySelectorAll('.comment-image a')).map(x => x.href),
+    };
+}
+
+
+function closePikabuSaveButtonDialogEvent(e) {
+    if (!pikabuSaveButtonDialog.contains(e.target)) {
+        pikabuSaveButtonDialog.style.visibility = "hidden";
+        document.removeEventListener("click", closePikabuSaveButtonDialogEvent);
+    }
+}
 
 function addTagButton(comment) {
     const id = comment.getAttribute("data-id");
     let saveButton = comment.querySelector('.comment__tool[data-role="save"]');
     saveButton.addEventListener('click', e => {
-        console.log("clicked id " + id);
-        let popup = document.getElementById("tagit__pikabuSaveButtonDialog");
-        popup.style.visibility = "visible";
-        popup.style.left = e.pageX + "px";
-        popup.style.top = e.pageY + "px";
+        PikabuSaveCommentPopup.instance.setState({
+            commentId: id,
+            commentData: commentNodeToData(comment),
+        }, () => {
+            PikabuSaveCommentPopup.instance.onShown();
+            let popup = document.getElementById("tagit__pikabuSaveButtonDialog");
+            popup.style.visibility = "visible";
+            popup.style.left = e.pageX + "px";
+            popup.style.top = e.pageY + "px";
+            setTimeout(
+                () => {
+                    document.addEventListener("click", closePikabuSaveButtonDialogEvent)
+                },
+                50
+            )
+        });
     });
 }
 

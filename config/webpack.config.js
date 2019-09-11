@@ -163,7 +163,8 @@ module.exports = function (webpackEnv) {
                 // initialization, it doesn't blow up the WebpackDevServer client, and
                 // changing JS code would still trigger a refresh.
             ].filter(Boolean),
-            appPikabuSaveCommentPopupJs: paths.appPikabuSaveCommentPopupJs,
+            pikabuSaveCommentPopup: paths.pikabuSaveCommentPopupJs,
+            backgroundRPCListener: paths.backgroundRPCListenerJs,
         },
         output: {
             // The build folder.
@@ -275,8 +276,11 @@ module.exports = function (webpackEnv) {
             // https://medium.com/webpack/webpack-4-code-splitting-chunk-graph-and-the-splitchunks-optimization-be739a861366
             splitChunks:
                 {
-                    chunks: 'all',
-                    name: false,
+                    // chunks: 'all',
+                    // name: false,
+                    cacheGroups: {
+                        default: false,
+                    },
                 }
             ,
             // Keep the runtime chunk separated to enable long term caching
