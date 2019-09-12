@@ -5,6 +5,7 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import TopBar from './TopBar';
 
 import * as db from "../models/db";
+import * as log from "../misc/log";
 import Paper from "@material-ui/core/Paper";
 import Button from "@material-ui/core/Button";
 import {withAlert} from "react-alert";
@@ -107,8 +108,12 @@ class Pikabu extends Component {
         tags: [],
     };
 
-    async componentDidMount() {
-        this.setState({
+    componentDidMount() {
+        return this.updateAll();
+    }
+
+    async updateAll() {
+        await this.setState({
             comments: await db.getAllPikabuComments(),
             tags: await db.getAllTags(),
         });
@@ -125,7 +130,7 @@ class Pikabu extends Component {
                 []
             );
         } catch (e) {
-            console.log(e);
+            log.error(e);
             if (e.hasOwnProperty("message")) {
                 this.props.alert.error(e.message);
             } else {
@@ -133,6 +138,21 @@ class Pikabu extends Component {
             }
         }
     };
+
+    async deletePikabuCommentById(id) {
+        try {
+            await db.deletePikabuCommentById(id);
+            this.props.alert.info("deleted successfully");
+            await this.updateAll();
+        } catch (e) {
+            log.error(e);
+            if (e.hasOwnProperty("message")) {
+                this.props.alert.error(e.message);
+            } else {
+                this.props.alert.error(JSON.stringify(e));
+            }
+        }
+    }
 
     render() {
         const {classes} = this.props;
@@ -154,6 +174,7 @@ class Pikabu extends Component {
                         this.state.comments.map((comment, index) => {
                             // TODO: move to a component
                             return <Paper key={index}>
+                                <Button onClick={() => {this.deletePikabuCommentById(comment.id)}}>Удалить</Button>
                                 <p>{comment.id}</p>
                                 <p>{comment.authorUsername}</p>
                                 <p>{comment.createdAtDate}</p>

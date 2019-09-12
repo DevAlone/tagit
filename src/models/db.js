@@ -58,6 +58,11 @@ export async function createPikabuCommentIfNotExists(
     }
 }
 
+export async function deletePikabuCommentById(id) {
+    const doc = await pikabuComments.get(id);
+    await pikabuComments.remove(doc);
+}
+
 /**
  * returns all existing tags
  *

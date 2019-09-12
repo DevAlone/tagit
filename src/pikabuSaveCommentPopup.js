@@ -1,14 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './pikabuSaveCommentPopup.css';
-import Paper from "@material-ui/core/Paper";
-import Button from "@material-ui/core/Button";
-import * as db from "./models/db";
-import * as react_alert from "react-alert";
-import {Provider as AlertProvider} from "react-alert";
-import AlertTemplate from "react-alert-template-basic";
-import {useAlert} from "react-alert";
 import PikabuSaveCommentPopup from "./components/PikabuSaveCommentPopup";
+import * as log from "./misc/log";
 
 // TODO: remove
 document.body.style.border = "5px solid red";
@@ -27,55 +21,16 @@ document.body.appendChild(pikabuSaveButtonDialog);
 
 ReactDOM.render(<PikabuSaveCommentPopupRoot/>, pikabuSaveButtonDialog);
 
-/*
-async function tagComment(commentId, tagId) {
-    const commentKey = "pikabu:comment__" + commentId;
-    const tagKey = "tag__" + tagId;
-    let comment = (await browser.storage.sync.get(commentKey))[commentKey];
-    let tag = await browser.storage.sync.get(tagKey);
-    console.log("comment");
-    console.log(comment);
-
-    comment.tags = Array.from(new Set(comment.tags).add(tagId));
-    tag.items = Array.from(new Set(tag.items).add(commentKey));
-
-    let obj = {};
-    obj[commentKey] = comment;
-    obj[tagKey] = tag;
-    await browser.storage.sync.set(obj);
-}
-
-// saves comment to sync storage
-async function saveCommentToStorage(id, commentNode) {
-    const commentData = commentNodeToData(commentNode);
-
-    try {
-        await db.createPikabuCommentIfNotExists(
-            id,
-            commentData.authorUsername,
-            commentData.createdAtDate,
-            commentData.contentHTML,
-            commentData.contentText,
-            commentData.contentImages
-        );
-        // TODO: alert
-        console.log("saved succesfully");
-        // const tag = await createTagIfNotExists("none");
-        // await tagComment(id, tag.id);
-    } catch (e) {
-        console.log("error happened");
-        console.log(e);
-    }
-}
- */
 
 function commentNodeToData(commentNode) {
+    const id = commentNode.getAttribute("data-id");
+    commentNode = commentNode.querySelector(".comment__body");
     return {
-        id: commentNode.getAttribute("data-id"),
+        id: id,
         authorUsername: commentNode.querySelector(".comment__user").getAttribute("data-name"),
         createdAtDate: commentNode.querySelector(".comment__datetime").getAttribute("datetime"),
         contentHTML: commentNode.querySelector(".comment__content").innerHTML,
-        contentText: "// TODO: implement",
+        contentText: commentNode.querySelector(".comment__content").innerText,
         contentImages: Array.from(commentNode.querySelectorAll('.comment-image a')).map(x => x.href),
     };
 }
@@ -90,7 +45,7 @@ function closePikabuSaveButtonDialogEvent(e) {
 
 function addTagButton(comment) {
     const id = comment.getAttribute("data-id");
-    let saveButton = comment.querySelector('.comment__tool[data-role="save"]');
+    let saveButton = comment.querySelector('.comment__body .comment__tool[data-role="save"]');
     saveButton.addEventListener('click', e => {
         PikabuSaveCommentPopup.instance.setState({
             commentId: id,
@@ -128,7 +83,8 @@ function startObserving() {
     const observer = new MutationObserver(observerCallback);
 
     observer.observe(
-        document.getElementsByClassName("page-story__comments")[0],
+        // document.getElementsByClassName("page-story__comments")[0],
+        document.body,
         {
             childList: true,
             subtree: true,
@@ -136,7 +92,7 @@ function startObserving() {
     );
 
     // observer.disconnect();
-    console.log("observing started");
+    log.info("observing new comments started");
 }
 
 startObserving();

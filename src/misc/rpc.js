@@ -1,12 +1,11 @@
 // functions to talk with background from content script
 
 import * as db from "../models/db";
+import * as log from "../misc/log";
 
 /* global browser */
 
 export async function callFromContentScript(fileName, functionName, args) {
-    console.log("tryna call rp from content script");
-    console.log(browser);
     return await browser.runtime.sendMessage({
         method: "call",
         fileName: fileName,
@@ -16,9 +15,8 @@ export async function callFromContentScript(fileName, functionName, args) {
 }
 
 export async function listenFromBackgroundScript() {
-    console.log("listening from background script")
     browser.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
-        console.log("got request: " + JSON.stringify(request));
+        log.info("rpc listener got request: ", JSON.stringify(request));
         const res = await handleRequest(request);
 
         return {
