@@ -1,5 +1,8 @@
 'use strict';
 
+const WriteFilePlugin = require('write-file-webpack-plugin');
+const HtmlWebpackExcludeAssetsPlugin = require('html-webpack-exclude-assets-plugin');
+
 const fs = require('fs');
 const isWsl = require('is-wsl');
 const path = require('path');
@@ -35,7 +38,8 @@ const appPackageJson = require(paths.appPackageJson);
 const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
 // Some apps do not need the benefits of saving a web request, so not inlining the chunk
 // makes for a smoother build process.
-const shouldInlineRuntimeChunk = process.env.INLINE_RUNTIME_CHUNK !== 'false';
+// const shouldInlineRuntimeChunk = process.env.INLINE_RUNTIME_CHUNK !== 'false';
+const shouldInlineRuntimeChunk = false;
 
 const imageInlineSizeLimit = parseInt(
     process.env.IMAGE_INLINE_SIZE_LIMIT || '10000'
@@ -155,8 +159,11 @@ module.exports = function (webpackEnv) {
                 // the line below with these two lines if you prefer the stock client:
                 // require.resolve('webpack-dev-server/client') + '?/',
                 // require.resolve('webpack/hot/dev-server'),
-                isEnvDevelopment &&
-                require.resolve('react-dev-utils/webpackHotDevClient'),
+
+                // doesn't work, cuz it's inlined and chrome's security policy doesn't allow inlined js
+                /*isEnvDevelopment &&
+                require.resolve('react-dev-utils/webpackHotDevClient'),*/
+
                 // Finally, this is your app's code:
                 paths.appIndexJs,
                 // We include the app code last so that if there is a runtime error during
@@ -168,19 +175,13 @@ module.exports = function (webpackEnv) {
         },
         output: {
             // The build folder.
-            path: isEnvProduction ? paths.appBuild : undefined,
+            path: paths.appBuild,
             // Add /* filename */ comments to generated require()s in the output.
-            pathinfo:
-            isEnvDevelopment,
+            pathinfo: isEnvDevelopment,
             // There will be one main bundle, and one file per asynchronous chunk.
             // In development, it does not produce real files.
-            filename:
-                isEnvProduction
-                    ? 'static/js/[name].js'
-                    : isEnvDevelopment && 'static/js/bundle.js',
-            // TODO: remove this when upgrading to webpack 5
-            futureEmitAssets:
-                true,
+            filename: 'static/js/[name].js',
+            futureEmitAssets: false,
             // There are also additional JS chunk files if you use code splitting.
             chunkFilename:
                 isEnvProduction
@@ -188,8 +189,7 @@ module.exports = function (webpackEnv) {
                     : isEnvDevelopment && 'static/js/[name].chunk.js',
             // We inferred the "public path" (such as / or /my-project) from homepage.
             // We use "/" in development.
-            publicPath:
-            publicPath,
+            publicPath: publicPath,
             // Point sourcemap entries to original disk location (format as URL on Windows)
             devtoolModuleFilenameTemplate:
                 isEnvProduction
@@ -527,7 +527,7 @@ module.exports = function (webpackEnv) {
                 Object.assign(
                     {},
                     {
-                        inject: true,
+                        inject: false,
                         template: paths.appHtml,
                     },
                     isEnvProduction
@@ -581,8 +581,7 @@ module.exports = function (webpackEnv) {
             // See https://github.com/facebook/create-react-app/issues/186
             isEnvDevelopment &&
             new WatchMissingNodeModulesPlugin(paths.appNodeModules),
-            isEnvProduction &&
-            new MiniCssExtractPlugin({
+            isEnvProduction && new MiniCssExtractPlugin({
                 // Options similar to the same options in webpackOptions.output
                 // both options are optional
                 filename: 'static/css/[name].css',
@@ -657,6 +656,7 @@ module.exports = function (webpackEnv) {
                 // The formatter is invoked directly in WebpackDevServerUtils during development
                 formatter: isEnvProduction ? typescriptFormatter : undefined,
             }),
+            new WriteFilePlugin(),
         ].filter(Boolean),
         // Some libraries import Node modules but don't use them in the browser.
         // Tell Webpack to provide empty mocks for them so importing them works.

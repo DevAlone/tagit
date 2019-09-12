@@ -113,7 +113,7 @@ class TopBar extends Component {
         return (
             <AppBar position="absolute" color="default" className={classes.appBar}>
                 <Toolbar>
-                    <Grid container spacing={24} alignItems="baseline">
+                    <Grid container alignItems="baseline">
                         <Grid item xs={12} className={classes.flex}>
                             <div className={classes.inline}>
                                 <Typography variant="h6" color="inherit" noWrap>

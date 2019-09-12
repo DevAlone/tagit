@@ -12,6 +12,10 @@ const Menu = [
         pathname: "/youtube"
     },
     {
+        label: "Settings",
+        pathname: "/settings"
+    },
+    {
         label: "Github",
         pathname: "https://github.com/",
         external: true

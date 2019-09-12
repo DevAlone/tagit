@@ -1,16 +1,47 @@
 import {Tag, PikabuComment} from './models';
 import PouchDB from "pouchdb-browser";
+import {default as pouchDBFind} from "pouchdb-find";
 
-let tags = new PouchDB('tags');
-let pikabuComments = new PouchDB('pikabu_comments');
+PouchDB.plugin(pouchDBFind);
+
+let tables = {
+    tags: new PouchDB("tags"),
+    pikabuComments: new PouchDB("pikabu_comments"),
+};
+
+function createIndices() {
+    tables.tags.createIndex({
+        index: {
+            fields: ["name"],
+        }
+    });
+}
+
+createIndices();
 
 /**
  * creates a new tag with name or does nothing if tag exists
  *
  * @param name - tag's name
- * @returns {Promise<void>}
+ * @returns {Promise<boolean>}
  */
 export async function createTagIfNotExists(name) {
+    let tags = await tables.tags.find({
+        selector: {
+            name: name,
+        },
+    });
+
+    if (tags.docs.length === 0) {
+        // doesn't exist
+        await tables.tags.post({
+            name: name,
+        });
+        return true;
+    }
+
+    // exists so exit
+    return false;
 }
 
 /**
@@ -32,16 +63,14 @@ export async function createPikabuCommentIfNotExists(
     contentText,
     contentImages) {
     try {
-        let comment = await pikabuComments.get(id);
-        console.log("got comment");
-        console.log(comment);
+        await tables.pikabuComments.get(id);
         // exists so exit
         return false;
     } catch (err) {
         if (err.hasOwnProperty("status")) {
             if (err.status === 404) {
                 // create
-                await pikabuComments.put({
+                await tables.pikabuComments.put({
                     _id: id,
                     authorUsername: authorUsername,
                     createdAtDate: createdAtDate,
@@ -49,7 +78,6 @@ export async function createPikabuCommentIfNotExists(
                     contentText: contentText,
                     contentImages: contentImages,
                 });
-                console.log("created a comment");
 
                 return true;
             }
@@ -58,9 +86,26 @@ export async function createPikabuCommentIfNotExists(
     }
 }
 
+/**
+ * deletes pikabu comment with a provided id
+ *
+ * @param id
+ * @returns {Promise<void>}
+ */
 export async function deletePikabuCommentById(id) {
-    const doc = await pikabuComments.get(id);
-    await pikabuComments.remove(doc);
+    const doc = await tables.pikabuComments.get(id);
+    await tables.pikabuComments.remove(doc);
+}
+
+/**
+ * deletes tag with a provided id
+ *
+ * @param id
+ * @returns {Promise<void>}
+ */
+export async function deleteTagById(id) {
+    const doc = await tables.tags.get(id);
+    await tables.tags.remove(doc);
 }
 
 /**
@@ -69,12 +114,16 @@ export async function deletePikabuCommentById(id) {
  * @returns {Promise<*[]>}
  */
 export async function getAllTags() {
-    return [
-        new Tag("1", "none"),
-        new Tag("2", "fun"),
-        new Tag("3", "science"),
-        new Tag("4", "politics"),
-    ]
+    let res = await tables.tags.allDocs({
+        include_docs: true,
+    });
+
+    return res.rows.filter(row => !row.doc._id.startsWith("_")).map(row => {
+        let tag = new Tag();
+        Object.assign(tag, row.doc);
+        tag.id = tag._id;
+        return tag;
+    })
 }
 
 /**
@@ -83,14 +132,26 @@ export async function getAllTags() {
  * @returns {Promise<*[]>}
  */
 export async function getAllPikabuComments() {
-    let res = await pikabuComments.allDocs({
+    let res = await tables.pikabuComments.allDocs({
         include_docs: true,
         // attachments: true,
     });
-    return res.rows.map(row => {
+    return res.rows.filter(row => !row.doc._id.startsWith("_")).map(row => {
         let pikabuComment = new PikabuComment();
         Object.assign(pikabuComment, row.doc);
         pikabuComment.id = pikabuComment._id;
         return pikabuComment;
     });
+}
+
+/**
+ * drops database completely
+ *
+ * @returns {Promise<void>}
+ */
+export async function dropDatabase() {
+    for (let table of Object.keys(tables)) {
+        console.log(table);
+        await table.destroy();
+    }
 }

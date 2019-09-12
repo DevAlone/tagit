@@ -25,8 +25,13 @@ ReactDOM.render(<PikabuSaveCommentPopupRoot/>, pikabuSaveButtonDialog);
 function commentNodeToData(commentNode) {
     const id = commentNode.getAttribute("data-id");
     commentNode = commentNode.querySelector(".comment__body");
+    const commentLink = commentNode.querySelector('.comment__tools .comment__tool[data-role="link"]').href;
+    const storyId = commentLink.match(/^https?:\/\/.*pikabu.ru\/story\/.*_([0-9]+)\?cid=[0-9]+/i)[1];
+
     return {
         id: id,
+        commentLink: commentLink,
+        storyId: storyId,
         authorUsername: commentNode.querySelector(".comment__user").getAttribute("data-name"),
         createdAtDate: commentNode.querySelector(".comment__datetime").getAttribute("datetime"),
         contentHTML: commentNode.querySelector(".comment__content").innerHTML,

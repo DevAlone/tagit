@@ -15,14 +15,26 @@ export async function callFromContentScript(fileName, functionName, args) {
 }
 
 export async function listenFromBackgroundScript() {
+    log.debug("listenFromBackgroundScript()");
     browser.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         log.info("rpc listener got request: ", JSON.stringify(request));
-        const res = await handleRequest(request);
+        try {
+            const res = await handleRequest(request);
+            log.info("executed request ", JSON.stringify(request), " successfully");
 
-        return {
-            request: request,
-            response: res,
-        };
+            return {
+                request: request,
+                response: res,
+            };
+        } catch (e) {
+            log.info("request ", JSON.stringify(request), " threw an error during executing");
+            log.info(e);
+
+            return {
+                request: request,
+                exception: e,
+            };
+        }
     });
 }
 

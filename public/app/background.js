@@ -1,4 +1,4 @@
-// var browser = browser || chrome;
+/* global browser */
 
 function openMainPage() {
     browser.tabs.create({
@@ -8,6 +8,8 @@ function openMainPage() {
 
 browser.browserAction.onClicked.addListener(openMainPage);
 
+/*
+// TODO: delete?
 const jsLocation = "static/js/main.js";
 
 browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
@@ -18,3 +20,4 @@ browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         });
     }
 });
+ */

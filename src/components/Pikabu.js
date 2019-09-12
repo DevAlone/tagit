@@ -113,22 +113,27 @@ class Pikabu extends Component {
     }
 
     async updateAll() {
+        await this.updateTags();
+        await this.updateComments();
+    }
+
+    async updateComments() {
         await this.setState({
             comments: await db.getAllPikabuComments(),
+        });
+    }
+
+    async updateTags() {
+        await this.setState({
             tags: await db.getAllTags(),
         });
     }
 
-    async onButtonClick() {
+    async deletePikabuCommentById(id) {
         try {
-            await db.createPikabuCommentIfNotExists(
-                "1",
-                "admin",
-                "test",
-                "test content",
-                "test text",
-                []
-            );
+            await db.deletePikabuCommentById(id);
+            this.props.alert.info("deleted successfully");
+            await this.updateComments();
         } catch (e) {
             log.error(e);
             if (e.hasOwnProperty("message")) {
@@ -137,13 +142,14 @@ class Pikabu extends Component {
                 this.props.alert.error(JSON.stringify(e));
             }
         }
-    };
+    }
 
-    async deletePikabuCommentById(id) {
+    async deleteTagById(id) {
         try {
-            await db.deletePikabuCommentById(id);
+            // add prompt
+            await db.deleteTagById(id);
             this.props.alert.info("deleted successfully");
-            await this.updateAll();
+            await this.updateTags();
         } catch (e) {
             log.error(e);
             if (e.hasOwnProperty("message")) {
@@ -165,17 +171,15 @@ class Pikabu extends Component {
                 <div className={classes.root}>
                     pikabu:
 
-                    <Button color={"primary"} onClick={() => {this.onButtonClick()}}>
-                        click that
-                    </Button>
-
                     Comments:
                     {
                         this.state.comments.map((comment, index) => {
                             // TODO: move to a component
                             return <Paper key={index}>
-                                <Button onClick={() => {this.deletePikabuCommentById(comment.id)}}>Удалить</Button>
+                                <Button onClick={async () => {await this.deletePikabuCommentById(comment.id)}}>Удалить</Button>
                                 <p>{comment.id}</p>
+                                <p>{comment.commentLink}</p>
+                                <p>{comment.storyId}</p>
                                 <p>{comment.authorUsername}</p>
                                 <p>{comment.createdAtDate}</p>
                                 <p>{comment.contentHTML}</p>
@@ -191,11 +195,12 @@ class Pikabu extends Component {
 
                     Tags:
                     {
-                        this.state.tags.map((comment, index) => {
+                        this.state.tags.map((tag, index) => {
                             // TODO: move to a component
                             return <Paper key={index}>
-                                <p>{comment.id}</p>
-                                <p>{comment.name}</p>
+                                <Button onClick={async () => {await this.deleteTagById(tag.id)}}>Удалить</Button>
+                                <p>{tag.id}</p>
+                                <p>{tag.name}</p>
                             </Paper>;
                         })
                     }
