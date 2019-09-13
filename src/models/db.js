@@ -7,6 +7,8 @@ PouchDB.plugin(pouchDBFind);
 let tables = {
     tags: new PouchDB("tags"),
     pikabuComments: new PouchDB("pikabu_comments"),
+    pikabuCommentTagRelation: new PouchDB("pikabuCommentTagRelation"),
+    tagPikabuCommentRelation: new PouchDB("tagPikabuCommentRelation"),
 };
 
 function createIndices() {
@@ -108,15 +110,9 @@ export async function deleteTagById(id) {
     await tables.tags.remove(doc);
 }
 
-/**
- * returns all existing tags
- *
- * @returns {Promise<*[]>}
- */
-export async function getAllTags() {
-    let res = await tables.tags.allDocs({
-        include_docs: true,
-    });
+
+async function getTags(options) {
+    let res = await tables.tags.allDocs(options);
 
     return res.rows.filter(row => !row.doc._id.startsWith("_")).map(row => {
         let tag = new Tag();
@@ -127,21 +123,42 @@ export async function getAllTags() {
 }
 
 /**
- * returns all existing pikabu comments
+ * returns all existing tags
  *
  * @returns {Promise<*[]>}
  */
-export async function getAllPikabuComments() {
+export async function getAllTags() {
+    return await getTags({
+        include_docs: true,
+    });
+}
+
+/**
+ * returns all existing pikabu comments
+ *
+ * @param includeTags whether to include tags for each comment or not
+ * @returns {Promise<*[]>}
+ */
+export async function getAllPikabuComments(includeTags) {
+    includeTags = !!includeTags;
+
     let res = await tables.pikabuComments.allDocs({
         include_docs: true,
         // attachments: true,
     });
-    return res.rows.filter(row => !row.doc._id.startsWith("_")).map(row => {
+
+    res = res.rows.filter(row => !row.doc._id.startsWith("_"));
+    res = res.map(async row => {
         let pikabuComment = new PikabuComment();
         Object.assign(pikabuComment, row.doc);
         pikabuComment.id = pikabuComment._id;
+        if (includeTags) {
+            pikabuComment.tags = await getAllTagsByCommentId(pikabuComment.id);
+        }
         return pikabuComment;
     });
+
+    return await Promise.all(res);
 }
 
 /**
@@ -151,7 +168,50 @@ export async function getAllPikabuComments() {
  */
 export async function dropDatabase() {
     for (let table of Object.keys(tables)) {
-        console.log(table);
         await table.destroy();
     }
+}
+
+/**
+ * tags a comment
+ *
+ * @param commentId
+ * @param tagId
+ * @returns {Promise<boolean>} true if relation was created, false if already existed
+ */
+export async function makePikabuCommentTagRelationIfNotExists(commentId, tagId) {
+    // to be sure they exist
+    await tables.pikabuComments.get(commentId);
+    await tables.tags.get(tagId);
+
+    try {
+        await tables.pikabuCommentTagRelation.get(commentId + ":" + tagId);
+        // exists so exit
+        return false;
+    } catch (err) {
+        if (!err.hasOwnProperty("status") || err.status !== 404) {
+            throw err;
+        }
+    }
+
+    await tables.pikabuCommentTagRelation.put({_id: commentId + ":" + tagId});
+    await tables.tagPikabuCommentRelation.put({_id: tagId + ":" + commentId});
+
+    return true;
+}
+
+
+export async function getAllTagsByCommentId(commentId) {
+    // https://pouchdb.com/api.html#prefix-search
+    let ids = (await tables.pikabuCommentTagRelation.allDocs({
+        startkey: commentId + ":",
+        endkey: commentId + ":\ufff0",
+    })).rows.map(row => {
+        return row.id.split(':')[1];
+    });
+
+    return await getTags({
+        include_docs: true,
+        keys: ids,
+    });
 }

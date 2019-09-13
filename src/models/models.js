@@ -18,6 +18,7 @@ export class PikabuComment {
         this.contentHTML = contentHTML;
         this.contentText = contentText;
         this.contentImages = contentImages;
+        this.tags = [];
     }
 
     get _id() {

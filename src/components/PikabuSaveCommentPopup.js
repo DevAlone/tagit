@@ -33,7 +33,7 @@ class PikabuSaveCommentPopup extends React.Component {
     }
 
     async onShown() {
-        try {
+        await this.withAlertError(async () => {
             await this.updateTags();
             // TODO: update comment if exists?
             const res = await rpc.callFromContentScript("models/db.js", "createPikabuCommentIfNotExists", [
@@ -56,10 +56,7 @@ class PikabuSaveCommentPopup extends React.Component {
             } else {
                 log.info("comment " + this.state.commentId + " already existed");
             }
-        } catch (e) {
-            alert(JSON.stringify(e));
-            console.log(e);
-        }
+        });
     }
 
     onNewTagFieldChange = (e) => {
@@ -69,12 +66,10 @@ class PikabuSaveCommentPopup extends React.Component {
     };
 
     onNewTagAddClicked = async () => {
-        try {
-            console.log("tryna create a tag");
+        await this.withAlertError(async () => {
             const res = await rpc.callFromContentScript("models/db.js", "createTagIfNotExists", [
                 this.state.newTagValue,
             ]);
-            console.log("done creating a tag");
 
             if (res.hasOwnProperty("exception")) {
                 throw res.exception;
@@ -87,13 +82,41 @@ class PikabuSaveCommentPopup extends React.Component {
             } else {
                 log.info("tag " + this.state.commentId + " already existed");
             }
+
+            await this.updateTags();
+        });
+    };
+
+    onTagClicked = async (tag) => {
+        await this.withAlertError(async () => {
+            const res = await rpc.callFromContentScript("models/db.js", "makePikabuCommentTagRelationIfNotExists", [
+                this.state.commentId, tag.id,
+            ]);
+
+            if (res.hasOwnProperty("exception")) {
+                throw res.exception;
+            }
+
+            const wasSaved = res.response;
+
+            if (wasSaved) {
+                log.info("tag comment relation " + this.state.commentId + ":" + tag.id + " saved successfully");
+            } else {
+                log.info("tag comment relation " + this.state.commentId + ":" + tag.id + " already existed");
+            }
+
+            await this.updateTags();
+        });
+    };
+
+    withAlertError = async (func) => {
+        try {
+            return await func();
         } catch (e) {
             alert(JSON.stringify(e));
             console.log(e);
             throw e;
         }
-
-        await this.updateTags();
     };
 
     render() {
@@ -101,7 +124,9 @@ class PikabuSaveCommentPopup extends React.Component {
             <Paper>
                 {
                     this.state.tags.map((element, index) => {
-                        return <Button key={index}>{element.name}</Button>;
+                        return <Button key={index} onClick={async () => {
+                            await this.onTagClicked(element);
+                        }}>{element.name}</Button>;
                     })
                 }
                 <TextField onChange={(e) => {

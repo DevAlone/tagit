@@ -119,7 +119,7 @@ class Pikabu extends Component {
 
     async updateComments() {
         await this.setState({
-            comments: await db.getAllPikabuComments(),
+            comments: await db.getAllPikabuComments(true),
         });
     }
 
@@ -176,7 +176,9 @@ class Pikabu extends Component {
                         this.state.comments.map((comment, index) => {
                             // TODO: move to a component
                             return <Paper key={index}>
-                                <Button onClick={async () => {await this.deletePikabuCommentById(comment.id)}}>Удалить</Button>
+                                <Button onClick={async () => {
+                                    await this.deletePikabuCommentById(comment.id)
+                                }}>Удалить</Button>
                                 <p>{comment.id}</p>
                                 <p>{comment.commentLink}</p>
                                 <p>{comment.storyId}</p>
@@ -189,6 +191,11 @@ class Pikabu extends Component {
                                         return <img src={image} key={index}/>;
                                     })
                                 }</div>
+                                <div>{
+                                    comment.tags.map((tag, index) => {
+                                        return <span key={index}>{tag.name}</span>;
+                                    })
+                                }</div>
                             </Paper>;
                         })
                     }
@@ -198,7 +205,9 @@ class Pikabu extends Component {
                         this.state.tags.map((tag, index) => {
                             // TODO: move to a component
                             return <Paper key={index}>
-                                <Button onClick={async () => {await this.deleteTagById(tag.id)}}>Удалить</Button>
+                                <Button onClick={async () => {
+                                    await this.deleteTagById(tag.id)
+                                }}>Удалить</Button>
                                 <p>{tag.id}</p>
                                 <p>{tag.name}</p>
                             </Paper>;

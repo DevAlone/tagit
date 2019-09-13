@@ -308,6 +308,10 @@ module.exports = function (webpackEnv) {
                     .filter(ext => useTypeScript || !ext.includes('ts')),
             alias:
                 {
+                    // to fix bug "Promise.resolve is not a function"
+                    // https://github.com/pouchdb-community/relational-pouch/issues/86
+                    'pouchdb-promise': path.join(__dirname, '../node_modules/pouchdb-promise/lib/index.js'),
+
                     // Support React Native Web
                     // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
                     'react-native':
