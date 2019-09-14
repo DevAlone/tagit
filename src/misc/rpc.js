@@ -6,12 +6,18 @@ import * as log from "../misc/log";
 /* global browser */
 
 export async function callFromContentScript(fileName, functionName, args) {
-    return await browser.runtime.sendMessage({
+    const res = await browser.runtime.sendMessage({
         method: "call",
         fileName: fileName,
         functionName: functionName,
         args: args,
     });
+
+    if (res.hasOwnProperty("exception")) {
+        throw res.exception;
+    }
+
+    return res.response;
 }
 
 export async function listenFromBackgroundScript() {

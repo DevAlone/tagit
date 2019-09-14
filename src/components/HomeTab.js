@@ -85,7 +85,7 @@ const styles = theme => ({
     }
 });
 
-class Home extends Component {
+class HomeTab extends Component {
     state = {
         learnMoredialog: false,
         getStartedDialog: false
@@ -197,4 +197,4 @@ class Home extends Component {
     }
 }
 
-export default withRouter(withStyles(styles)(Home));
+export default withRouter(withStyles(styles)(HomeTab));

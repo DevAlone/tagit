@@ -1,19 +1,18 @@
 import React, {Component} from 'react';
 import withStyles from '@material-ui/styles/withStyles';
-import {withRouter, Link} from 'react-router-dom';
+import {withRouter} from 'react-router-dom';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import TopBar from './TopBar';
 
 import * as db from "../models/db";
 import * as log from "../misc/log";
-import Paper from "@material-ui/core/Paper";
 import Button from "@material-ui/core/Button";
 import {withAlert} from "react-alert";
 
 const styles = theme => ({
 });
 
-class Settings extends Component {
+class SettingsTab extends Component {
     state = {
     };
 
@@ -51,4 +50,4 @@ class Settings extends Component {
     }
 }
 
-export default withAlert()(withRouter(withStyles(styles)(Settings)));
+export default withAlert()(withRouter(withStyles(styles)(SettingsTab)));

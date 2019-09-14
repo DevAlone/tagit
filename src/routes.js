@@ -1,27 +1,32 @@
 import React from 'react'
 import {Route, HashRouter, Switch} from 'react-router-dom'
-import Home from './components/Home'
-import Pikabu from './components/Pikabu'
-import YouTube from './components/YouTube'
-import Settings from './components/Settings'
+import HomeTab from './components/HomeTab'
+import PikabuTab from './components/PikabuTab'
+import YouTubeTab from './components/YouTubeTab'
+import TagsTab from './components/TagsTab'
+import SettingsTab from './components/SettingsTab'
 import ScrollToTop from "./components/ScrollTop";
 
 export const routes = [
     {
         path: "/",
-        component: Home,
+        component: HomeTab,
     },
     {
         path: "/pikabu",
-        component: Pikabu,
+        component: PikabuTab,
     },
     {
         path: "/youtube",
-        component: YouTube,
+        component: YouTubeTab,
+    },
+    {
+        path: "/tags",
+        component: TagsTab,
     },
     {
         path: "/settings",
-        component: Settings,
+        component: SettingsTab,
     },
 ];
 

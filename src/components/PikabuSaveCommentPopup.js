@@ -4,31 +4,25 @@ import Button from "@material-ui/core/Button";
 import * as rpc from "../misc/rpc";
 import * as log from "../misc/log";
 import TextField from "@material-ui/core/TextField";
+import {withAlert} from "react-alert";
+import ChipInput from "material-ui-chip-input";
+import * as db from "../models/db";
 
 class PikabuSaveCommentPopup extends React.Component {
     state = {
         commentId: 0,
         commentData: 0,
-        tags: [],
-        newTagValue: "",
+        tags: []
     };
-
-    constructor(props) {
-        super(props);
-        PikabuSaveCommentPopup.instance = this;
-    }
 
     async componentDidMount() {
         await this.updateTags();
     }
 
     async updateTags() {
-        const res = await rpc.callFromContentScript("models/db.js", "getAllTags", []);
-        if (res.hasOwnProperty("exception")) {
-            throw res.exception;
-        }
+        const tags = await rpc.callFromContentScript("models/db.js", "getAllTags", []);
         await this.setState({
-            tags: res.response,
+            tags: tags,
         })
     }
 
@@ -53,29 +47,20 @@ class PikabuSaveCommentPopup extends React.Component {
 
             if (wasSaved) {
                 log.info("comment " + this.state.commentId + " saved successfully");
+                this.props.alert.show("Комментарий успешно сохранён");
             } else {
                 log.info("comment " + this.state.commentId + " already existed");
             }
         });
     }
 
-    onNewTagFieldChange = (e) => {
-        this.setState({
-            newTagValue: e.target.value,
-        });
-    };
-
-    onNewTagAddClicked = async () => {
+    onNewTagAddClicked = async (value) => {
         await this.withAlertError(async () => {
-            const res = await rpc.callFromContentScript("models/db.js", "createTagIfNotExists", [
-                this.state.newTagValue,
-            ]);
-
-            if (res.hasOwnProperty("exception")) {
-                throw res.exception;
-            }
-
-            const wasSaved = res.response;
+            const wasSaved = await rpc.callFromContentScript(
+                "models/db.js",
+                "createTagIfNotExists",
+                [value],
+            );
 
             if (wasSaved) {
                 log.info("tag " + this.state.commentId + " saved successfully");
@@ -87,17 +72,28 @@ class PikabuSaveCommentPopup extends React.Component {
         });
     };
 
+    onTagDeleteClicked = async (tagName, index) => {
+        await this.withAlertError(async () => {
+            // TODO: show prompt asking if user is sure about this
+            console.log("onTagDeleteClicked");
+            const wasDeleted = await rpc.callFromContentScript(
+                "models/db.js",
+                "deleteTagById",
+                [this.state.tags[index].id],
+            );
+
+            log.info("tag " + this.state.commentId + " deleted successfully");
+            this.props.alert.show("Тег удалён успешно");
+            await this.updateTags();
+        });
+    };
+
     onTagClicked = async (tag) => {
         await this.withAlertError(async () => {
-            const res = await rpc.callFromContentScript("models/db.js", "makePikabuCommentTagRelationIfNotExists", [
-                this.state.commentId, tag.id,
-            ]);
-
-            if (res.hasOwnProperty("exception")) {
-                throw res.exception;
-            }
-
-            const wasSaved = res.response;
+            const wasSaved = await rpc.callFromContentScript(
+                "models/db.js",
+                "makePikabuCommentTagRelationIfNotExists",
+                [this.state.commentId, tag.id]);
 
             if (wasSaved) {
                 log.info("tag comment relation " + this.state.commentId + ":" + tag.id + " saved successfully");
@@ -113,7 +109,7 @@ class PikabuSaveCommentPopup extends React.Component {
         try {
             return await func();
         } catch (e) {
-            alert(JSON.stringify(e));
+            this.props.alert.error(JSON.stringify(e));
             console.log(e);
             throw e;
         }
@@ -122,22 +118,20 @@ class PikabuSaveCommentPopup extends React.Component {
     render() {
         return (
             <Paper>
-                {
-                    this.state.tags.map((element, index) => {
-                        return <Button key={index} onClick={async () => {
-                            await this.onTagClicked(element);
-                        }}>{element.name}</Button>;
-                    })
-                }
-                <TextField onChange={(e) => {
-                    this.onNewTagFieldChange(e)
-                }}/>
-                <Button onClick={async () => {
-                    await this.onNewTagAddClicked()
-                }}>+</Button>
+                <ChipInput
+                    alwaysShowPlaceholder={true}
+                    lable={"Теги"}
+                    onAdd={this.onNewTagAddClicked}
+                    onDelete={this.onTagDeleteClicked}
+                    placeholder={"Введите тег"}
+                    value={this.state.tags.map(tag => tag.name)}
+                    onUpdateInput={arg => {
+                        console.log(arg);
+                    }}
+                />
             </Paper>
         )
     }
 }
 
-export default PikabuSaveCommentPopup;
+export default withAlert()(PikabuSaveCommentPopup);

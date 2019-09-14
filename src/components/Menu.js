@@ -12,6 +12,10 @@ const Menu = [
         pathname: "/youtube"
     },
     {
+        label: "Tags",
+        pathname: "/tags"
+    },
+    {
         label: "Settings",
         pathname: "/settings"
     },

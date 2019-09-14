@@ -3,14 +3,31 @@ import ReactDOM from 'react-dom';
 import './pikabuSaveCommentPopup.css';
 import PikabuSaveCommentPopup from "./components/PikabuSaveCommentPopup";
 import * as log from "./misc/log";
+import * as react_alert from "react-alert";
+import {Provider as AlertProvider} from 'react-alert'
+import AlertTemplate from 'react-alert-template-basic'
 
 // TODO: remove
 document.body.style.border = "5px solid red";
 
+const alertOptions = {
+    position: react_alert.positions.BOTTOM_RIGHT,
+    timeout: 5000,
+    offset: '30px',
+    transition: react_alert.transitions.SCALE
+};
+
 class PikabuSaveCommentPopupRoot extends React.Component {
+    constructor(props) {
+        super(props);
+        PikabuSaveCommentPopupRoot.pikabuSaveCommentPopupInstance = React.createRef();
+    }
+
     render() {
         return (
-            <PikabuSaveCommentPopup/>
+            <AlertProvider template={AlertTemplate} {...alertOptions}>
+                <PikabuSaveCommentPopup ref={PikabuSaveCommentPopupRoot.pikabuSaveCommentPopupInstance}/>
+            </AlertProvider>
         )
     }
 }
@@ -52,11 +69,11 @@ function addTagButton(comment) {
     const id = comment.getAttribute("data-id");
     let saveButton = comment.querySelector('.comment__body .comment__tool[data-role="save"]');
     saveButton.addEventListener('click', e => {
-        PikabuSaveCommentPopup.instance.setState({
+        PikabuSaveCommentPopupRoot.pikabuSaveCommentPopupInstance.current.setState({
             commentId: id,
             commentData: commentNodeToData(comment),
         }, () => {
-            PikabuSaveCommentPopup.instance.onShown();
+            PikabuSaveCommentPopupRoot.pikabuSaveCommentPopupInstance.current.onShown();
             let popup = document.getElementById("tagit__pikabuSaveButtonDialog");
             popup.style.visibility = "visible";
             popup.style.left = e.pageX + "px";

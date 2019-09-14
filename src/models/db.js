@@ -4,6 +4,8 @@ import {default as pouchDBFind} from "pouchdb-find";
 
 PouchDB.plugin(pouchDBFind);
 
+// TODO: delete relations when deleting comments and tags
+
 let tables = {
     tags: new PouchDB("tags"),
     pikabuComments: new PouchDB("pikabu_comments"),
@@ -28,6 +30,7 @@ createIndices();
  * @returns {Promise<boolean>}
  */
 export async function createTagIfNotExists(name) {
+    name = name.trim();
     let tags = await tables.tags.find({
         selector: {
             name: name,
@@ -89,7 +92,7 @@ export async function createPikabuCommentIfNotExists(
 }
 
 /**
- * deletes pikabu comment with a provided id
+ * deletes pikabu comment with provided id
  *
  * @param id
  * @returns {Promise<void>}
@@ -100,7 +103,7 @@ export async function deletePikabuCommentById(id) {
 }
 
 /**
- * deletes tag with a provided id
+ * deletes a tag with provided id
  *
  * @param id
  * @returns {Promise<void>}
@@ -133,19 +136,8 @@ export async function getAllTags() {
     });
 }
 
-/**
- * returns all existing pikabu comments
- *
- * @param includeTags whether to include tags for each comment or not
- * @returns {Promise<*[]>}
- */
-export async function getAllPikabuComments(includeTags) {
-    includeTags = !!includeTags;
-
-    let res = await tables.pikabuComments.allDocs({
-        include_docs: true,
-        // attachments: true,
-    });
+async function getPikabuComments(options, includeTags) {
+    let res = await tables.pikabuComments.allDocs(options);
 
     res = res.rows.filter(row => !row.doc._id.startsWith("_"));
     res = res.map(async row => {
@@ -162,11 +154,27 @@ export async function getAllPikabuComments(includeTags) {
 }
 
 /**
+ * returns all existing pikabu comments
+ *
+ * @param includeTags whether to include tags for each comment or not
+ * @returns {Promise<*[]>}
+ */
+export async function getAllPikabuComments(includeTags) {
+    includeTags = !!includeTags;
+    return await getPikabuComments({
+        include_docs: true,
+        // attachments: true,
+    }, includeTags);
+}
+
+/**
  * drops database completely
  *
  * @returns {Promise<void>}
  */
 export async function dropDatabase() {
+    // not sure why it thinks table is not used
+    // eslint-disable-next-line
     for (let table of Object.keys(tables)) {
         await table.destroy();
     }
@@ -200,7 +208,12 @@ export async function makePikabuCommentTagRelationIfNotExists(commentId, tagId) 
     return true;
 }
 
-
+/**
+ * retrieves all tags for the comment with provided id
+ *
+ * @param commentId
+ * @returns {Promise<*>}
+ */
 export async function getAllTagsByCommentId(commentId) {
     // https://pouchdb.com/api.html#prefix-search
     let ids = (await tables.pikabuCommentTagRelation.allDocs({
@@ -214,4 +227,26 @@ export async function getAllTagsByCommentId(commentId) {
         include_docs: true,
         keys: ids,
     });
+}
+
+
+/**
+ * retrieves all pikabu comments for the tag with provided id
+ *
+ * @param tagId
+ * @returns {Promise<*>}
+ */
+export async function getAllPikabuCommentsByTagId(tagId) {
+    // https://pouchdb.com/api.html#prefix-search
+    let ids = (await tables.tagPikabuCommentRelation.allDocs({
+        startkey: tagId + ":",
+        endkey: tagId + ":\ufff0",
+    })).rows.map(row => {
+        return row.id.split(':')[1];
+    });
+
+    return await getPikabuComments({
+        include_docs: true,
+        keys: ids,
+    }, false);
 }
