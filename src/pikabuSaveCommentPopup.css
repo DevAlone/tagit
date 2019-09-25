@@ -1,4 +1,9 @@
 #tagit__pikabuSaveButtonDialog {
-  position: absolute;
-  visibility: hidden;
+    position: absolute;
+    visibility: hidden;
+}
+
+#tagit__pikabuSaveButtonDialog svg {
+    /* workaround to make svgs clickable on pikabu.ru (spent hours trying to figure it out) */
+    pointer-events: auto;
 }

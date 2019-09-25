@@ -1,18 +1,19 @@
 import React from 'react';
 import Paper from "@material-ui/core/Paper";
-import Button from "@material-ui/core/Button";
 import * as rpc from "../misc/rpc";
 import * as log from "../misc/log";
-import TextField from "@material-ui/core/TextField";
 import {withAlert} from "react-alert";
-import ChipInput from "material-ui-chip-input";
-import * as db from "../models/db";
+import Input from "@material-ui/core/Input";
+import Button from "@material-ui/core/Button";
+import Chip from "@material-ui/core/Chip";
 
 class PikabuSaveCommentPopup extends React.Component {
     state = {
         commentId: 0,
         commentData: 0,
-        tags: []
+        allTags: [],
+        commentTags: [],
+        inputText: "",
     };
 
     async componentDidMount() {
@@ -22,8 +23,16 @@ class PikabuSaveCommentPopup extends React.Component {
     async updateTags() {
         const tags = await rpc.callFromContentScript("models/db.js", "getAllTags", []);
         await this.setState({
-            tags: tags,
-        })
+            allTags: tags,
+        });
+        const commentTags = await rpc.callFromContentScript(
+            "models/db.js",
+            "getAllTagsByCommentId",
+            [this.state.commentId],
+        );
+        await this.setState({
+            commentTags: commentTags,
+        });
     }
 
     async onShown() {
@@ -54,36 +63,56 @@ class PikabuSaveCommentPopup extends React.Component {
         });
     }
 
-    onNewTagAddClicked = async (value) => {
+    onNewTagAddClicked = async () => {
         await this.withAlertError(async () => {
             const wasSaved = await rpc.callFromContentScript(
                 "models/db.js",
                 "createTagIfNotExists",
-                [value],
+                [this.state.inputText],
             );
 
             if (wasSaved) {
-                log.info("tag " + this.state.commentId + " saved successfully");
+                log.info("tag " + this.state.inputText + " saved successfully");
             } else {
-                log.info("tag " + this.state.commentId + " already existed");
+                log.info("tag " + this.state.inputText + " already existed");
             }
 
             await this.updateTags();
         });
     };
 
+    onInputChanged = async (event) => {
+        await this.setState({
+            inputText: event.target.value,
+        });
+        // TODO: add filtering
+    };
+
+    onKeyDown = async (event) => {
+        if (event.keyCode === 13) {
+            await this.onNewTagAddClicked;
+        }
+    };
+
     onTagDeleteClicked = async (tagName, index) => {
         await this.withAlertError(async () => {
-            // TODO: show prompt asking if user is sure about this
-            console.log("onTagDeleteClicked");
+            if (!window.confirm("Вы уверены, что хотите удалить тег " + tagName + " и снять его со всех комментариев?")) {
+                return;
+            }
             const wasDeleted = await rpc.callFromContentScript(
                 "models/db.js",
                 "deleteTagById",
-                [this.state.tags[index].id],
+                [this.state.allTags[index].id],
             );
 
-            log.info("tag " + this.state.commentId + " deleted successfully");
-            this.props.alert.show("Тег удалён успешно");
+            if (wasDeleted) {
+                log.info("tag " + this.state.commentId + " deleted successfully");
+                this.props.alert.show("Тег удалён успешно");
+            } else {
+                log.info("tag " + this.state.commentId + " was not deleted");
+                this.props.alert.show("Тег не был удалён");
+            }
+
             await this.updateTags();
         });
     };
@@ -105,12 +134,16 @@ class PikabuSaveCommentPopup extends React.Component {
         });
     };
 
+    untagCurrentComment = async (tag) => {
+        console.log("untagging tag ", tag);
+    };
+
     withAlertError = async (func) => {
         try {
             return await func();
         } catch (e) {
             this.props.alert.error(JSON.stringify(e));
-            console.log(e);
+            log.error(e);
             throw e;
         }
     };
@@ -118,17 +151,62 @@ class PikabuSaveCommentPopup extends React.Component {
     render() {
         return (
             <Paper>
-                <ChipInput
-                    alwaysShowPlaceholder={true}
-                    lable={"Теги"}
-                    onAdd={this.onNewTagAddClicked}
-                    onDelete={this.onTagDeleteClicked}
-                    placeholder={"Введите тег"}
-                    value={this.state.tags.map(tag => tag.name)}
-                    onUpdateInput={arg => {
-                        console.log(arg);
-                    }}
+                <div>list of current tags:</div>
+                <div>
+                    {
+                        this.state.commentTags.map((tag, index) => {
+                            return <Chip
+                                key={index}
+                                label={tag.name}
+                                onClick={async () => {
+                                    await this.untagCurrentComment(tag);
+                                }}
+                                onDelete={async () => {
+                                    await this.untagCurrentComment(tag);
+                                }}
+                            />;
+                        })
+                    }
+                </div>
+                <Input
+                    autoFocus={true}
+                    onChange={this.onInputChanged}
+                    onKeyDown={this.onKeyDown}
                 />
+                <Button
+                    color={"primary"}
+                    onClick={this.onNewTagAddClicked}
+                >
+                    +
+                </Button>
+                <div>list of all tags except current</div>
+                <div>
+                    {
+                        this.state.allTags.map((tag, index) => {
+                            return <Chip
+                                key={index}
+                                label={tag.name}
+                                onClick={async () => {
+                                    await this.onTagClicked(tag);
+                                }}
+                                onDelete={async () => {
+                                    await this.onTagDeleteClicked(tag.name, index);
+                                }}
+                            />;
+                        })
+                    }
+                </div>
+                {/*<ChipInput*/}
+                {/*    alwaysShowPlaceholder={true}*/}
+                {/*    lable={"Теги"}*/}
+                {/*    onAdd={this.onNewTagAddClicked}*/}
+                {/*    onDelete={this.onTagDeleteClicked}*/}
+                {/*    placeholder={"Введите тег"}*/}
+                {/*    value={this.state.allTags.map(tag => tag.name)}*/}
+                {/*    onUpdateInput={arg => {*/}
+                {/*        console.log(arg);*/}
+                {/*    }}*/}
+                {/*/>*/}
             </Paper>
         )
     }

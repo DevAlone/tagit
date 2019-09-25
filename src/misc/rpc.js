@@ -2,6 +2,7 @@
 
 import * as db from "../models/db";
 import * as log from "../misc/log";
+import {deserializeError, serializeError} from "serialize-error";
 
 /* global browser */
 
@@ -14,7 +15,7 @@ export async function callFromContentScript(fileName, functionName, args) {
     });
 
     if (res.hasOwnProperty("exception")) {
-        throw res.exception;
+        throw deserializeError(res.exception);
     }
 
     return res.response;
@@ -38,7 +39,7 @@ export async function listenFromBackgroundScript() {
 
             return {
                 request: request,
-                exception: e,
+                exception: serializeError(e),
             };
         }
     });
