@@ -1,8 +1,13 @@
 import {Tag, PikabuComment} from './models';
 import PouchDB from "pouchdb-browser";
 import {default as pouchDBFind} from "pouchdb-find";
+import {default as pouchDBUpsert} from "pouchdb-upsert";
+// import {default as pouchDBQuickSearch} from "pouchdb-quick-search";
 
 PouchDB.plugin(pouchDBFind);
+PouchDB.plugin(pouchDBUpsert);
+// PouchDB.plugin(pouchDBQuickSearch);
+
 
 // TODO: delete relations when deleting comments and tags
 
@@ -50,6 +55,23 @@ export async function createTagIfNotExists(name) {
 }
 
 /**
+ * finds all tags with a provided name
+ *
+ * @param name
+ * @returns {Promise<*>}
+ */
+export async function getTagsByName(name) {
+    name = name.trim();
+    let resp = await tables.tags.find({
+        selector: {
+            name: name,
+        },
+    });
+
+    return rowsToListOfTags(resp.docs);
+}
+
+/**
  * creates new pikabu comment with id or does nothing if comment with a provided id exists
  *
  * @param id
@@ -67,32 +89,19 @@ export async function createPikabuCommentIfNotExists(
     contentHTML,
     contentText,
     contentImages) {
-    try {
-        await tables.pikabuComments.get(id);
-        // exists so exit
-        return false;
-    } catch (err) {
-        if (err.hasOwnProperty("status")) {
-            if (err.status === 404) {
-                // create
-                await tables.pikabuComments.put({
-                    _id: id,
-                    authorUsername: authorUsername,
-                    createdAtDate: createdAtDate,
-                    contentHTML: contentHTML,
-                    contentText: contentText,
-                    contentImages: contentImages,
-                });
 
-                return true;
-            }
-        }
-        throw err;
-    }
+    await tables.pikabuComments.putIfNotExists({
+        _id: id,
+        authorUsername: authorUsername,
+        createdAtDate: createdAtDate,
+        contentHTML: contentHTML,
+        contentText: contentText,
+        contentImages: contentImages,
+    });
 }
 
 /**
- * deletes pikabu comment with provided id
+ * deletes pikabu comment with provided id and all its comment:tag relations
  *
  * @param id
  * @returns {Promise<void>}
@@ -100,10 +109,11 @@ export async function createPikabuCommentIfNotExists(
 export async function deletePikabuCommentById(id) {
     const doc = await tables.pikabuComments.get(id);
     await tables.pikabuComments.remove(doc);
+    const tags = await getAllTagsByPikabuCommentId(id);
 }
 
 /**
- * deletes a tag with provided id
+ * deletes a tag with provided id and all its comment:tags relations
  *
  * @param id
  * @returns {Promise<void>}
@@ -113,16 +123,26 @@ export async function deleteTagById(id) {
     await tables.tags.remove(doc);
 }
 
+function rowsToListOfTags(rows) {
+    return rows.map(row => {
+        if (row.hasOwnProperty("doc")) {
+            return row.doc;
+        }
+        return row;
+    }).filter(row => !row._id.startsWith("_")).map(row => {
+        let tag = new Tag();
+        Object.assign(tag, row);
+        tag.id = tag._id;
+        return tag;
+    });
+}
 
 async function getTags(options) {
     let res = await tables.tags.allDocs(options);
 
-    return res.rows.filter(row => !row.doc._id.startsWith("_")).map(row => {
-        let tag = new Tag();
-        Object.assign(tag, row.doc);
-        tag.id = tag._id;
-        return tag;
-    })
+    console.log(res);
+
+    return rowsToListOfTags(res.rows);
 }
 
 /**
@@ -145,7 +165,7 @@ async function getPikabuComments(options, includeTags) {
         Object.assign(pikabuComment, row.doc);
         pikabuComment.id = pikabuComment._id;
         if (includeTags) {
-            pikabuComment.tags = await getAllTagsByCommentId(pikabuComment.id);
+            pikabuComment.tags = await getAllTagsByPikabuCommentId(pikabuComment.id);
         }
         return pikabuComment;
     });
@@ -192,18 +212,25 @@ export async function makePikabuCommentTagRelationIfNotExists(commentId, tagId) 
     await tables.pikabuComments.get(commentId);
     await tables.tags.get(tagId);
 
-    try {
-        await tables.pikabuCommentTagRelation.get(commentId + ":" + tagId);
-        // exists so exit
-        return false;
-    } catch (err) {
-        if (!err.hasOwnProperty("status") || err.status !== 404) {
-            throw err;
-        }
-    }
+    await tables.pikabuCommentTagRelation.putIfNotExists({_id: commentId + ":" + tagId});
+    await tables.tagPikabuCommentRelation.putIfNotExists({_id: tagId + ":" + commentId});
 
-    await tables.pikabuCommentTagRelation.put({_id: commentId + ":" + tagId});
-    await tables.tagPikabuCommentRelation.put({_id: tagId + ":" + commentId});
+    return true;
+}
+
+export async function removePikabuCommentTagRelation(commentId, tagId) {
+    // to be sure they exist
+    await tables.pikabuComments.get(commentId);
+    await tables.tags.get(tagId);
+
+    {
+        const doc = await tables.pikabuCommentTagRelation.get(commentId + ":" + tagId);
+        await tables.pikabuCommentTagRelation.remove(doc);
+    }
+    {
+        const doc = await tables.tagPikabuCommentRelation.get(tagId + ":" + commentId);
+        await tables.tagPikabuCommentRelation.remove(doc);
+    }
 
     return true;
 }
@@ -214,7 +241,7 @@ export async function makePikabuCommentTagRelationIfNotExists(commentId, tagId) 
  * @param commentId
  * @returns {Promise<*>}
  */
-export async function getAllTagsByCommentId(commentId) {
+export async function getAllTagsByPikabuCommentId(commentId) {
     // https://pouchdb.com/api.html#prefix-search
     let ids = (await tables.pikabuCommentTagRelation.allDocs({
         startkey: commentId + ":",
@@ -227,6 +254,23 @@ export async function getAllTagsByCommentId(commentId) {
         include_docs: true,
         keys: ids,
     });
+}
+
+export async function searchTagsByName(name) {
+    let tags = await getAllTags();
+
+    return tags.filter(tag => tag.name.toLowerCase().includes(name));
+    /*    const res = await tables.tags.search({
+            query: name,
+            fields: ['name'],
+            include_docs: true,
+            highlighting: true,
+        });
+
+        console.log(res);
+
+        return rowsToListOfTags(res.rows);
+     */
 }
 
 

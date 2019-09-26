@@ -1,0 +1,9 @@
+exporting and importing db to file
+full text search https://github.com/pouchdb-community/pouchdb-quick-search
+syncronization. Review these links:
+	https://github.com/pouchdb-community/pouchdb-replication-stream
+	https://github.com/calvinmetcalf/PouchStream
+	https://github.com/pgte/pouch-websocket-sync
+	https://github.com/pgte/pouch-remote-stream#readme
+	https://github.com/pgte/pouch-stream-server#readme
+

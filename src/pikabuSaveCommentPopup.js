@@ -6,7 +6,6 @@ import * as log from "./misc/log";
 import * as react_alert from "react-alert";
 import {Provider as AlertProvider} from 'react-alert'
 import AlertTemplate from 'react-alert-template-basic'
-import Chip from "@material-ui/core/Chip";
 
 // TODO: remove
 document.body.style.border = "5px solid red";

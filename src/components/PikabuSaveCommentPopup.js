@@ -6,6 +6,33 @@ import {withAlert} from "react-alert";
 import Input from "@material-ui/core/Input";
 import Button from "@material-ui/core/Button";
 import Chip from "@material-ui/core/Chip";
+import withStyles from "@material-ui/core/styles/withStyles";
+
+const styles = theme => ({
+    root: {
+        maxWidth: 400,
+        padding: 3,
+    },
+    searchBar: {
+        width: "100%",
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "nowrap",
+        justifyContent: "space-between",
+        alignItems: "stretch",
+        alignContent: "stretch",
+        borderBottom: "1px solid #999",
+        marginTop: 2,
+        marginBottom: 2,
+    },
+    inputField: {
+        flexGrow: 1,
+    },
+    addNewTagButton: {},
+    tag: {
+        margin: 1,
+    },
+});
 
 class PikabuSaveCommentPopup extends React.Component {
     state = {
@@ -21,17 +48,36 @@ class PikabuSaveCommentPopup extends React.Component {
     }
 
     async updateTags() {
-        const tags = await rpc.callFromContentScript("models/db.js", "getAllTags", []);
-        await this.setState({
-            allTags: tags,
-        });
         const commentTags = await rpc.callFromContentScript(
             "models/db.js",
-            "getAllTagsByCommentId",
+            "getAllTagsByPikabuCommentId",
             [this.state.commentId],
         );
         await this.setState({
             commentTags: commentTags,
+        });
+
+        const commentTagIdsSet = new Set(commentTags.map(tag => tag.id));
+
+        let tags = [];
+        const searchText = this.state.inputText.trim();
+        if (searchText.length === 0) {
+            tags = await rpc.callFromContentScript(
+                "models/db.js",
+                "getAllTags",
+                []
+            );
+        } else {
+            tags = await rpc.callFromContentScript(
+                "models/db.js",
+                "searchTagsByName",
+                [searchText],
+            );
+        }
+        tags = tags.filter(tag => !commentTagIdsSet.has(tag.id));
+
+        await this.setState({
+            allTags: tags,
         });
     }
 
@@ -39,7 +85,7 @@ class PikabuSaveCommentPopup extends React.Component {
         await this.withAlertError(async () => {
             await this.updateTags();
             // TODO: update comment if exists?
-            const res = await rpc.callFromContentScript("models/db.js", "createPikabuCommentIfNotExists", [
+            const wasSaved = await rpc.callFromContentScript("models/db.js", "createPikabuCommentIfNotExists", [
                 this.state.commentId,
                 this.state.commentData.authorUsername,
                 this.state.commentData.createdAtDate,
@@ -47,12 +93,6 @@ class PikabuSaveCommentPopup extends React.Component {
                 this.state.commentData.contentText,
                 this.state.commentData.contentImages,
             ]);
-
-            if (res.hasOwnProperty("exception")) {
-                throw res.exception;
-            }
-
-            const wasSaved = res.response;
 
             if (wasSaved) {
                 log.info("comment " + this.state.commentId + " saved successfully");
@@ -79,18 +119,35 @@ class PikabuSaveCommentPopup extends React.Component {
 
             await this.updateTags();
         });
+
+        const tags = await rpc.callFromContentScript(
+            "models/db.js",
+            "getTagsByName",
+            [this.state.inputText],
+        );
+
+        console.log(tags);
+
+        await this.onTagClicked(tags[0]);
+
+        await this.setState({
+            inputText: "",
+        });
+
+        await this.updateTags();
     };
 
     onInputChanged = async (event) => {
         await this.setState({
             inputText: event.target.value,
         });
-        // TODO: add filtering
+        // TODO: debounce
+        await this.updateTags();
     };
 
     onKeyDown = async (event) => {
         if (event.keyCode === 13) {
-            await this.onNewTagAddClicked;
+            await this.onNewTagAddClicked();
         }
     };
 
@@ -122,7 +179,8 @@ class PikabuSaveCommentPopup extends React.Component {
             const wasSaved = await rpc.callFromContentScript(
                 "models/db.js",
                 "makePikabuCommentTagRelationIfNotExists",
-                [this.state.commentId, tag.id]);
+                [this.state.commentId, tag.id]
+            );
 
             if (wasSaved) {
                 log.info("tag comment relation " + this.state.commentId + ":" + tag.id + " saved successfully");
@@ -136,6 +194,21 @@ class PikabuSaveCommentPopup extends React.Component {
 
     untagCurrentComment = async (tag) => {
         console.log("untagging tag ", tag);
+        await this.withAlertError(async () => {
+            const wasUntagged = await rpc.callFromContentScript(
+                "models/db.js",
+                "removePikabuCommentTagRelation",
+                [this.state.commentId, tag.id]
+            );
+
+            if (wasUntagged) {
+                log.info("tag comment relation " + this.state.commentId + ":" + tag.id + " deleted successfully");
+            } else {
+                log.info("tag comment relation " + this.state.commentId + ":" + tag.id + " did not delete");
+            }
+
+            await this.updateTags();
+        });
     };
 
     withAlertError = async (func) => {
@@ -149,18 +222,18 @@ class PikabuSaveCommentPopup extends React.Component {
     };
 
     render() {
+        const {classes} = this.props;
+
         return (
-            <Paper>
-                <div>list of current tags:</div>
+            <Paper className={classes.root}>
+                <p>Текущие теги</p>
                 <div>
                     {
                         this.state.commentTags.map((tag, index) => {
                             return <Chip
+                                className={classes.tag}
                                 key={index}
                                 label={tag.name}
-                                onClick={async () => {
-                                    await this.untagCurrentComment(tag);
-                                }}
                                 onDelete={async () => {
                                     await this.untagCurrentComment(tag);
                                 }}
@@ -168,22 +241,29 @@ class PikabuSaveCommentPopup extends React.Component {
                         })
                     }
                 </div>
-                <Input
-                    autoFocus={true}
-                    onChange={this.onInputChanged}
-                    onKeyDown={this.onKeyDown}
-                />
-                <Button
-                    color={"primary"}
-                    onClick={this.onNewTagAddClicked}
-                >
-                    +
-                </Button>
-                <div>list of all tags except current</div>
+                <div className={classes.searchBar}>
+                    <Input
+                        className={classes.inputField}
+                        disableUnderline={true}
+                        autoFocus={true}
+                        value={this.state.inputText}
+                        onChange={this.onInputChanged}
+                        onKeyDown={this.onKeyDown}
+                    />
+                    <Button
+                        className={classes.addNewTagButton}
+                        color={"primary"}
+                        onClick={this.onNewTagAddClicked}
+                        focusVisible={false}
+                    >
+                        +
+                    </Button>
+                </div>
                 <div>
                     {
                         this.state.allTags.map((tag, index) => {
                             return <Chip
+                                className={classes.tag}
                                 key={index}
                                 label={tag.name}
                                 onClick={async () => {
@@ -196,20 +276,9 @@ class PikabuSaveCommentPopup extends React.Component {
                         })
                     }
                 </div>
-                {/*<ChipInput*/}
-                {/*    alwaysShowPlaceholder={true}*/}
-                {/*    lable={"Теги"}*/}
-                {/*    onAdd={this.onNewTagAddClicked}*/}
-                {/*    onDelete={this.onTagDeleteClicked}*/}
-                {/*    placeholder={"Введите тег"}*/}
-                {/*    value={this.state.allTags.map(tag => tag.name)}*/}
-                {/*    onUpdateInput={arg => {*/}
-                {/*        console.log(arg);*/}
-                {/*    }}*/}
-                {/*/>*/}
             </Paper>
         )
     }
 }
 
-export default withAlert()(PikabuSaveCommentPopup);
+export default withAlert()(withStyles(styles)(PikabuSaveCommentPopup));
