@@ -196,7 +196,7 @@ export async function dropDatabase() {
     // not sure why it thinks table is not used
     // eslint-disable-next-line
     for (let table of Object.keys(tables)) {
-        await table.destroy();
+        await tables[table].destroy();
     }
 }
 
@@ -260,19 +260,7 @@ export async function searchTagsByName(name) {
     let tags = await getAllTags();
 
     return tags.filter(tag => tag.name.toLowerCase().includes(name));
-    /*    const res = await tables.tags.search({
-            query: name,
-            fields: ['name'],
-            include_docs: true,
-            highlighting: true,
-        });
-
-        console.log(res);
-
-        return rowsToListOfTags(res.rows);
-     */
 }
-
 
 /**
  * retrieves all pikabu comments for the tag with provided id

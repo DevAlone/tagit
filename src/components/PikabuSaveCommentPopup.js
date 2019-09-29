@@ -243,6 +243,7 @@ class PikabuSaveCommentPopup extends React.Component {
                 </div>
                 <div className={classes.searchBar}>
                     <Input
+                        id={"tagit_pikabuSaveCommentPopupInput"}
                         className={classes.inputField}
                         disableUnderline={true}
                         autoFocus={true}
@@ -254,7 +255,6 @@ class PikabuSaveCommentPopup extends React.Component {
                         className={classes.addNewTagButton}
                         color={"primary"}
                         onClick={this.onNewTagAddClicked}
-                        focusVisible={false}
                     >
                         +
                     </Button>

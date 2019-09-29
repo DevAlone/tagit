@@ -21,7 +21,9 @@ class SettingsTab extends Component {
 
     async dropDatabase() {
         try {
-            // TODO: prompt
+            if (!window.confirm("Вы уверены, что хотите удалить ВСЁ?")) {
+                return;
+            }
             await db.dropDatabase();
             this.props.alert.info("deleted successfully");
         } catch (e) {

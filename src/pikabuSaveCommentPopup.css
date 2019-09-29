@@ -1,6 +1,7 @@
 #tagit__pikabuSaveButtonDialog {
     position: absolute;
     visibility: hidden;
+    z-index: 1048576;
 }
 
 #tagit__pikabuSaveButtonDialog svg {

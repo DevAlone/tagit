@@ -9,8 +9,20 @@ import * as log from "../misc/log";
 import Paper from "@material-ui/core/Paper";
 import Button from "@material-ui/core/Button";
 import {withAlert} from "react-alert";
+import Grid from "@material-ui/core/Grid";
+import PikabuComment from "./PikabuComment";
 
-const styles = theme => ({});
+const styles = theme => ({
+    paper: {
+        maxWidth: 600,
+        padding: 2,
+        margin: 2,
+    },
+    pikabuCommentImage: {
+        width: "100%",
+        background: "red",
+    },
+});
 
 class PikabuTab extends Component {
     state = {
@@ -41,6 +53,10 @@ class PikabuTab extends Component {
 
     async deletePikabuCommentById(id) {
         try {
+            if (!window.confirm("Вы уверены, что хотите удалить комментарий " + id + " и снять с него все теги?")) {
+                return;
+            }
+            await db.deleteTagById(id);
             await db.deletePikabuCommentById(id);
             this.props.alert.info("deleted successfully");
             await this.updateComments();
@@ -56,7 +72,9 @@ class PikabuTab extends Component {
 
     async deleteTagById(id) {
         try {
-            // add prompt
+            if (!window.confirm("Вы уверены, что хотите удалить тег " + id + " и снять его со всех комментариев?")) {
+                return;
+            }
             await db.deleteTagById(id);
             this.props.alert.info("deleted successfully");
             await this.updateTags();
@@ -79,50 +97,45 @@ class PikabuTab extends Component {
                 <CssBaseline/>
                 <TopBar currentPath={currentPath}/>
                 <div className={classes.root}>
-                    pikabu:
+                    <h1>Комментарии:</h1>
+                    <Grid
+                        container
+                        direction="row"
+                        justify="space-around"
+                        alignItems="stretch"
+                    >
+                        {
+                            this.state.comments.map((comment, index) => {
+                                return (<div key={index}>
+                                    <Button onClick={async () => {
+                                        await this.deletePikabuCommentById(comment.id)
+                                    }}>Удалить</Button>
+                                    <PikabuComment data={comment} key={index}/>
+                                </div>);
+                            })
+                        }
+                    </Grid>
 
-                    Comments:
-                    {
-                        this.state.comments.map((comment, index) => {
-                            // TODO: move to a component
-                            return <Paper key={index}>
-                                <Button onClick={async () => {
-                                    await this.deletePikabuCommentById(comment.id)
-                                }}>Удалить</Button>
-                                <p>{comment.id}</p>
-                                <p>{comment.commentLink}</p>
-                                <p>{comment.storyId}</p>
-                                <p>{comment.authorUsername}</p>
-                                <p>{comment.createdAtDate}</p>
-                                <p>{comment.contentHTML}</p>
-                                <p>{comment.contentText}</p>
-                                <div>{
-                                    comment.contentImages.map((image, index) => {
-                                        return <img src={image} key={index} alt={""}/>;
-                                    })
-                                }</div>
-                                <div>{
-                                    comment.tags.map((tag, index) => {
-                                        return <span key={index}>{tag.name}</span>;
-                                    })
-                                }</div>
-                            </Paper>;
-                        })
-                    }
-
-                    Tags:
-                    {
-                        this.state.tags.map((tag, index) => {
-                            // TODO: move to a component
-                            return <Paper key={index}>
-                                <Button onClick={async () => {
-                                    await this.deleteTagById(tag.id)
-                                }}>Удалить</Button>
-                                <p>{tag.id}</p>
-                                <p>{tag.name}</p>
-                            </Paper>;
-                        })
-                    }
+                    <h1>Tags:</h1>
+                    <Grid
+                        container
+                        direction="row"
+                        justify="space-around"
+                        alignItems="stretch"
+                    >
+                        {
+                            this.state.tags.map((tag, index) => {
+                                // TODO: move to a component
+                                return <Paper key={index}>
+                                    <Button onClick={async () => {
+                                        await this.deleteTagById(tag.id)
+                                    }}>Удалить</Button>
+                                    <p>{tag.id}</p>
+                                    <p>{tag.name}</p>
+                                </Paper>;
+                            })
+                        }
+                    </Grid>
                 </div>
             </React.Fragment>
         )

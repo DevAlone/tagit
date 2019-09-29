@@ -45,6 +45,16 @@ function commentNodeToData(commentNode) {
     const commentLink = commentNode.querySelector('.comment__tools .comment__tool[data-role="link"]').href;
     const storyId = commentLink.match(/^https?:\/\/.*pikabu.ru\/story\/.*_([0-9]+)\?cid=[0-9]+/i)[1];
 
+    let contentText = "";
+    {
+        let commentContent = commentNode.querySelector(".comment__content").cloneNode(true);
+        const images = commentContent.querySelectorAll(".comment-image");
+        for (const image of images) {
+            commentContent.removeChild(image);
+        }
+        contentText = commentContent.innerHTML;
+    }
+
     return {
         id: id,
         commentLink: commentLink,
@@ -52,39 +62,60 @@ function commentNodeToData(commentNode) {
         authorUsername: commentNode.querySelector(".comment__user").getAttribute("data-name"),
         createdAtDate: commentNode.querySelector(".comment__datetime").getAttribute("datetime"),
         contentHTML: commentNode.querySelector(".comment__content").innerHTML,
-        contentText: commentNode.querySelector(".comment__content").innerText,
+        contentText: contentText,
         contentImages: Array.from(commentNode.querySelectorAll('.comment-image a')).map(x => x.href),
     };
 }
 
+function closePikabuSaveButtonDialog() {
+    pikabuSaveButtonDialog.style.visibility = "hidden";
+    document.removeEventListener("click", closePikabuSaveButtonDialogEvent);
+}
 
 function closePikabuSaveButtonDialogEvent(e) {
     if (!pikabuSaveButtonDialog.contains(e.target)) {
-        pikabuSaveButtonDialog.style.visibility = "hidden";
-        document.removeEventListener("click", closePikabuSaveButtonDialogEvent);
+        closePikabuSaveButtonDialog();
     }
 }
+
+(() => {
+    window.addEventListener("keydown", e => {
+        if (e.key === "Escape") {
+            closePikabuSaveButtonDialog();
+        }
+    });
+})();
 
 function addTagButton(comment) {
     const id = comment.getAttribute("data-id");
     let saveButton = comment.querySelector('.comment__body .comment__tool[data-role="save"]');
-    saveButton.addEventListener('click', e => {
+    if (saveButton === null) {
+        // for example for comment of the day
+        return;
+    }
+    const openSaveCommentPopup = e => {
         PikabuSaveCommentPopupRoot.pikabuSaveCommentPopupInstance.current.setState({
             commentId: id,
             commentData: commentNodeToData(comment),
         }, () => {
-            PikabuSaveCommentPopupRoot.pikabuSaveCommentPopupInstance.current.onShown();
             let popup = document.getElementById("tagit__pikabuSaveButtonDialog");
             popup.style.visibility = "visible";
             popup.style.left = e.pageX + "px";
             popup.style.top = e.pageY + "px";
-            setTimeout(
-                () => {
+            document.getElementById("tagit_pikabuSaveCommentPopupInput").focus();
+            PikabuSaveCommentPopupRoot.pikabuSaveCommentPopupInstance.current.onShown();
+
+            setTimeout(() => {
                     document.addEventListener("click", closePikabuSaveButtonDialogEvent)
-                },
-                50
-            )
+                }, 50
+            );
         });
+    };
+
+    saveButton.addEventListener('click', openSaveCommentPopup);
+    saveButton.addEventListener('contextmenu', e => {
+        e.preventDefault();
+        openSaveCommentPopup(e);
     });
 }
 
@@ -99,13 +130,12 @@ const observerCallback = (mutationsList, observer) => {
 };
 
 function startObserving() {
-    for (let comment of document.querySelectorAll('.page-story__comments .comment')) {
+    for (let comment of document.querySelectorAll('.comment')) {
         addTagButton(comment);
     }
     const observer = new MutationObserver(observerCallback);
 
     observer.observe(
-        // document.getElementsByClassName("page-story__comments")[0],
         document.body,
         {
             childList: true,
@@ -113,8 +143,13 @@ function startObserving() {
         }
     );
 
-    // observer.disconnect();
     log.info("observing new comments started");
 }
 
-startObserving();
+try {
+    startObserving()
+} catch (e) {
+    console.log("tagit: error:");
+    console.log(e);
+    throw e;
+}
