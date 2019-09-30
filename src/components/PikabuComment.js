@@ -5,12 +5,38 @@ import Button from "@material-ui/core/Button";
 import {withAlert} from "react-alert";
 import {Link} from "@material-ui/core";
 
-const styles = theme => ({});
+const styles = () => ({
+    paper: {
+        padding: 10,
+    },
+    header: {
+        "& *": {
+            marginRight: "3px",
+        }
+    },
+    createdAtDate: {
+        color: "#999",
+    },
+    pikabuCommentImagesContainer: {
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "wrap",
+        justifyContent: "space-around",
+        alignItems: "center",
+        alignContent: "center",
+    },
+    pikabuCommentImage: {
+        maxWidth: "100%",
+        height: "300px",
+    },
+});
 
 class PikabuComment extends Component {
     state = {
         commentData: {
             id: 0,
+            commentLink: "",
+            storyId: 0,
             authorUsername: "",
             createdAtDate: "",
             contentHTML: "",
@@ -21,6 +47,7 @@ class PikabuComment extends Component {
     };
 
     componentDidMount() {
+        console.log(this.props.data);
         this.setState({
             commentData: this.props.data,
         });
@@ -32,18 +59,24 @@ class PikabuComment extends Component {
         return (<Paper
             className={classes.paper}
         >
-            <Link
-                // href={"https://pikabu.ru/story/_" + this.state.commentData.storyId + "?cid=" + this.state.commentData.id}
-                href={this.state.commentLink}
-            >
-                {this.state.commentLink}
-            </Link>
-            <header>@{this.state.commentData.authorUsername} {this.state.commentData.createdAtDate}</header>
-            <h1>contentHTML:</h1>
-            <p>{this.state.commentData.contentHTML}</p>
-            <h1>contentText:</h1>
+            <header className={classes.header}>
+                <Link
+                    href={this.state.commentData.commentLink}
+                >
+                    Ссылка
+                </Link>
+                <span>@{this.state.commentData.authorUsername}</span>
+                <span className={classes.createdAtDate}>{this.state.commentData.createdAtDate}</span>
+                <span>{
+                    this.state.commentData.tags.map((tag, index) => {
+                        return <span key={index}>{tag.name}</span>;
+                    })
+                }</span>
+            </header>
             <p>{this.state.commentData.contentText}</p>
-            <div>{
+            <div
+                className={classes.pikabuCommentImagesContainer}
+            >{
                 this.state.commentData.contentImages.map((image, index) => {
                     return <img
                         className={classes.pikabuCommentImage}
@@ -51,11 +84,6 @@ class PikabuComment extends Component {
                         key={index}
                         alt={""}
                     />;
-                })
-            }</div>
-            <div>{
-                this.state.commentData.tags.map((tag, index) => {
-                    return <span key={index}>{tag.name}</span>;
                 })
             }</div>
         </Paper>);

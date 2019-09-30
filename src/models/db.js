@@ -2,10 +2,12 @@ import {Tag, PikabuComment} from './models';
 import PouchDB from "pouchdb-browser";
 import {default as pouchDBFind} from "pouchdb-find";
 import {default as pouchDBUpsert} from "pouchdb-upsert";
+import {default as pouchDBAllDbs} from "pouchdb-all-dbs";
 // import {default as pouchDBQuickSearch} from "pouchdb-quick-search";
 
 PouchDB.plugin(pouchDBFind);
 PouchDB.plugin(pouchDBUpsert);
+PouchDB.plugin(pouchDBAllDbs);
 // PouchDB.plugin(pouchDBQuickSearch);
 
 
@@ -83,21 +85,27 @@ export async function getTagsByName(name) {
  * @returns {Promise<boolean>} true if was saved to db, false if already existed
  */
 export async function createPikabuCommentIfNotExists(
-    id,
+    commentId,
+    commentLink,
+    storyId,
     authorUsername,
     createdAtDate,
     contentHTML,
     contentText,
-    contentImages) {
-
-    await tables.pikabuComments.putIfNotExists({
-        _id: id,
-        authorUsername: authorUsername,
-        createdAtDate: createdAtDate,
-        contentHTML: contentHTML,
-        contentText: contentText,
-        contentImages: contentImages,
-    });
+    contentImages,
+) {
+    return (await tables.pikabuComments.putIfNotExists(
+        (new PikabuComment(
+            commentId,
+            commentLink,
+            storyId,
+            authorUsername,
+            createdAtDate,
+            contentHTML,
+            contentText,
+            contentImages,
+        )).toPouchDbObject(),
+    )).updated;
 }
 
 /**
@@ -161,9 +169,7 @@ async function getPikabuComments(options, includeTags) {
 
     res = res.rows.filter(row => !row.doc._id.startsWith("_"));
     res = res.map(async row => {
-        let pikabuComment = new PikabuComment();
-        Object.assign(pikabuComment, row.doc);
-        pikabuComment.id = pikabuComment._id;
+        let pikabuComment = PikabuComment.fromPouchDbObject(row.doc);
         if (includeTags) {
             pikabuComment.tags = await getAllTagsByPikabuCommentId(pikabuComment.id);
         }
@@ -193,10 +199,16 @@ export async function getAllPikabuComments(includeTags) {
  * @returns {Promise<void>}
  */
 export async function dropDatabase() {
+    /*
     // not sure why it thinks table is not used
     // eslint-disable-next-line
     for (let table of Object.keys(tables)) {
         await tables[table].destroy();
+    }
+     */
+    const dbs = await PouchDB.allDbs();
+    for (const dbName of dbs) {
+        await (new PouchDB(dbName)).destroy();
     }
 }
 

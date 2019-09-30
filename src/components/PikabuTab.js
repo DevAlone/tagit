@@ -13,15 +13,15 @@ import Grid from "@material-ui/core/Grid";
 import PikabuComment from "./PikabuComment";
 
 const styles = theme => ({
-    paper: {
-        maxWidth: 600,
-        padding: 2,
-        margin: 2,
-    },
-    pikabuCommentImage: {
+    pikabuCommentContainer: {
         width: "100%",
-        background: "red",
+        padding: "5px 10px",
     },
+    pikabuComment: {},
+    pikabuCommentDeleteButtonContainer: {
+        display: "flex",
+        justifyContent: "flex-end",
+    }
 });
 
 class PikabuTab extends Component {
@@ -40,6 +40,10 @@ class PikabuTab extends Component {
     }
 
     async updateComments() {
+        const pikabu_comments = await db.getAllPikabuComments(true);
+        console.log("pikabu_comments:");
+        console.log(pikabu_comments);
+
         await this.setState({
             comments: await db.getAllPikabuComments(true),
         });
@@ -106,11 +110,22 @@ class PikabuTab extends Component {
                     >
                         {
                             this.state.comments.map((comment, index) => {
-                                return (<div key={index}>
-                                    <Button onClick={async () => {
-                                        await this.deletePikabuCommentById(comment.id)
-                                    }}>Удалить</Button>
-                                    <PikabuComment data={comment} key={index}/>
+                                return (<div
+                                    className={classes.pikabuCommentContainer}
+                                    key={index}
+                                >
+                                    <div className={classes.pikabuCommentDeleteButtonContainer}>
+                                        <Button
+                                            onClick={async () => {
+                                                await this.deletePikabuCommentById(comment.id)
+                                            }}>
+                                            Удалить
+                                        </Button>
+                                    </div>
+                                    <PikabuComment
+                                        className={classes.pikabuComment}
+                                        data={comment} key={index}
+                                    />
                                 </div>);
                             })
                         }

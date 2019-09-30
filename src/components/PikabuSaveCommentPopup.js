@@ -7,6 +7,7 @@ import Input from "@material-ui/core/Input";
 import Button from "@material-ui/core/Button";
 import Chip from "@material-ui/core/Chip";
 import withStyles from "@material-ui/core/styles/withStyles";
+import {PikabuComment} from "../models/models";
 
 const styles = theme => ({
     root: {
@@ -83,16 +84,24 @@ class PikabuSaveCommentPopup extends React.Component {
 
     async onShown() {
         await this.withAlertError(async () => {
+            await this.setState({
+                inputText: "",
+            });
             await this.updateTags();
-            // TODO: update comment if exists?
-            const wasSaved = await rpc.callFromContentScript("models/db.js", "createPikabuCommentIfNotExists", [
-                this.state.commentId,
-                this.state.commentData.authorUsername,
-                this.state.commentData.createdAtDate,
-                this.state.commentData.contentHTML,
-                this.state.commentData.contentText,
-                this.state.commentData.contentImages,
-            ]);
+            const wasSaved = await rpc.callFromContentScript(
+                "models/db.js",
+                "createPikabuCommentIfNotExists",
+                [
+                    this.state.commentId,
+                    this.state.commentData.commentLink,
+                    this.state.commentData.storyId,
+                    this.state.commentData.authorUsername,
+                    this.state.commentData.createdAtDate,
+                    this.state.commentData.contentHTML,
+                    this.state.commentData.contentText,
+                    this.state.commentData.contentImages,
+                ],
+            );
 
             if (wasSaved) {
                 log.info("comment " + this.state.commentId + " saved successfully");
@@ -243,7 +252,7 @@ class PikabuSaveCommentPopup extends React.Component {
                 </div>
                 <div className={classes.searchBar}>
                     <Input
-                        id={"tagit_pikabuSaveCommentPopupInput"}
+                        id={"tagit__pikabuSaveCommentPopupInput"}
                         className={classes.inputField}
                         disableUnderline={true}
                         autoFocus={true}
@@ -255,6 +264,7 @@ class PikabuSaveCommentPopup extends React.Component {
                         className={classes.addNewTagButton}
                         color={"primary"}
                         onClick={this.onNewTagAddClicked}
+                        tabindex={"-1"}
                     >
                         +
                     </Button>
