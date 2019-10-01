@@ -94,6 +94,10 @@ export async function createPikabuCommentIfNotExists(
     contentText,
     contentImages,
 ) {
+    if (typeof commentId !== "string") {
+        commentId = commentId.toString();
+    }
+
     return (await tables.pikabuComments.putIfNotExists(
         (new PikabuComment(
             commentId,
@@ -220,6 +224,10 @@ export async function dropDatabase() {
  * @returns {Promise<boolean>} true if relation was created, false if already existed
  */
 export async function makePikabuCommentTagRelationIfNotExists(commentId, tagId) {
+    if (typeof commentId !== "string") {
+        commentId = commentId.toString();
+    }
+
     // to be sure they exist
     await tables.pikabuComments.get(commentId);
     await tables.tags.get(tagId);

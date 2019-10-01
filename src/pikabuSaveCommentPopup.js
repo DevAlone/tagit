@@ -8,6 +8,7 @@ import {Provider as AlertProvider} from 'react-alert'
 import AlertTemplate from 'react-alert-template-basic'
 import * as rpc from "./misc/rpc";
 import {PikabuComment} from "./models/models";
+import Paper from "@material-ui/core/Paper";
 
 const alertOptions = {
     position: react_alert.positions.BOTTOM_RIGHT,
@@ -25,7 +26,9 @@ class PikabuSaveCommentPopupRoot extends React.Component {
     render() {
         return (
             <AlertProvider template={AlertTemplate} {...alertOptions}>
-                <PikabuSaveCommentPopup ref={PikabuSaveCommentPopupRoot.pikabuSaveCommentPopupInstance}/>
+                <Paper className={"tagit__pikabuSaveCommentPopupRoot"}>
+                    <PikabuSaveCommentPopup ref={PikabuSaveCommentPopupRoot.pikabuSaveCommentPopupInstance}/>
+                </Paper>
             </AlertProvider>
         )
     }

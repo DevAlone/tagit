@@ -11,6 +11,7 @@ import Button from "@material-ui/core/Button";
 import {withAlert} from "react-alert";
 import Grid from "@material-ui/core/Grid";
 import PikabuComment from "./PikabuComment";
+import {Checkbox} from "@material-ui/core";
 
 const styles = theme => ({
     pikabuCommentContainer: {
@@ -127,27 +128,6 @@ class PikabuTab extends Component {
                                         data={comment} key={index}
                                     />
                                 </div>);
-                            })
-                        }
-                    </Grid>
-
-                    <h1>Tags:</h1>
-                    <Grid
-                        container
-                        direction="row"
-                        justify="space-around"
-                        alignItems="stretch"
-                    >
-                        {
-                            this.state.tags.map((tag, index) => {
-                                // TODO: move to a component
-                                return <Paper key={index}>
-                                    <Button onClick={async () => {
-                                        await this.deleteTagById(tag.id)
-                                    }}>Удалить</Button>
-                                    <p>{tag.id}</p>
-                                    <p>{tag.name}</p>
-                                </Paper>;
                             })
                         }
                     </Grid>

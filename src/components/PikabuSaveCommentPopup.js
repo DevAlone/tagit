@@ -7,13 +7,8 @@ import Input from "@material-ui/core/Input";
 import Button from "@material-ui/core/Button";
 import Chip from "@material-ui/core/Chip";
 import withStyles from "@material-ui/core/styles/withStyles";
-import {PikabuComment} from "../models/models";
 
 const styles = theme => ({
-    root: {
-        maxWidth: 400,
-        padding: 3,
-    },
     searchBar: {
         width: "100%",
         display: "flex",
@@ -45,6 +40,16 @@ class PikabuSaveCommentPopup extends React.Component {
     };
 
     async componentDidMount() {
+        if (this.props.commentId !== null) {
+            await this.setState({
+                commentId: this.props.commentId,
+            });
+        }
+        if (this.props.commentData !== null) {
+            await this.setState({
+                commentData: this.props.commentData,
+            });
+        }
         await this.updateTags();
     }
 
@@ -60,8 +65,17 @@ class PikabuSaveCommentPopup extends React.Component {
 
         const commentTagIdsSet = new Set(commentTags.map(tag => tag.id));
 
-        let tags = [];
         const searchText = this.state.inputText.trim();
+
+        if (this.props.showAllTagsOnlyWithInput && searchText.length === 0) {
+            this.setState({
+                allTags: [],
+            });
+            return;
+        }
+
+        let tags = [];
+
         if (searchText.length === 0) {
             tags = await rpc.callFromContentScript(
                 "models/db.js",
@@ -234,7 +248,7 @@ class PikabuSaveCommentPopup extends React.Component {
         const {classes} = this.props;
 
         return (
-            <Paper className={classes.root}>
+            <div>
                 <p>Текущие теги</p>
                 <div>
                     {
@@ -286,7 +300,7 @@ class PikabuSaveCommentPopup extends React.Component {
                         })
                     }
                 </div>
-            </Paper>
+            </div>
         )
     }
 }

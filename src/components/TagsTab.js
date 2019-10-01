@@ -32,13 +32,18 @@ class TagsTab extends Component {
     };
 
     onAdd = async (value) => {
-        // TODO: check if tag exists and show a message
-        await db.createTagIfNotExists(value);
+        const wasCreated = await db.createTagIfNotExists(value);
+        if (!wasCreated) {
+            this.props.alert.show("tag already existed");
+        }
         await this.updateTags();
     };
 
     onDelete = async (tagName, index) => {
-        // TODO: show prompt asking if user is sure about this
+        if (!window.confirm("Вы уверены, что хотите удалить тег " + tagName + " и снять его со всех комментариев?")) {
+            return;
+        }
+
         await db.deleteTagById(this.state.tags[index].id);
         await this.updateTags();
     };

@@ -8,3 +8,8 @@
     /* workaround to make svgs clickable on pikabu.ru (spent hours trying to figure it out) */
     pointer-events: auto;
 }
+
+.tagit__pikabuSaveCommentPopupRoot {
+    max-width: 400px;
+    padding: 3px;
+}
