@@ -23,6 +23,7 @@ export class PikabuComment {
         this.contentText = contentText;
         this.contentImages = contentImages;
         this.tags = [];
+        this.hasTags = "0";
     }
 
     get _id() {

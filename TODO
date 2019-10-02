@@ -7,5 +7,5 @@ syncronization. Review these links:
 	https://github.com/pgte/pouch-remote-stream#readme
 	https://github.com/pgte/pouch-stream-server#readme
 
-add saved comment to tagit automatically
-
+fix encoding
+fix comment https://pikabu.ru/story/pryizhok_v_bezdnu_5664127?cid=105635080 (does not have any images in pouchdb)

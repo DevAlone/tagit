@@ -55,7 +55,16 @@ class PikabuTab extends Component {
     }
 
     async updateComments() {
-        let pikabuComments = await db.getAllPikabuComments(true);
+        // let pikabuComments = await db.getAllPikabuComments(true);
+        let pikabuComments = await db.getPikabuComments(
+            "id",
+            false,
+            this.state.showOnlyCommentsWithoutTags,
+            true,
+            10,
+            0,
+        );
+
         pikabuComments = pikabuComments.filter(comment => {
             return !this.state.showOnlyCommentsWithoutTags || comment.tags.length === 0;
         });

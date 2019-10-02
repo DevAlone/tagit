@@ -22,9 +22,14 @@ let tables = {
 };
 
 function createIndices() {
-    tables.tags.createIndex({
+    /*tables.tags.createIndex({
         index: {
             fields: ["name"],
+        }
+    });*/
+    tables.pikabuComments.createIndex({
+        index: {
+            fields: ["hasTags"],
         }
     });
 }
@@ -179,19 +184,55 @@ export async function getAllTags() {
     });
 }
 
-async function getPikabuComments(options, includeTags) {
-    let res = await tables.pikabuComments.allDocs(options);
+// TODO: write a doc
+export async function getPikabuComments(fieldToOrder, reversedOrdering, onlyWithoutTags, includeTags, limit, skip) {
+    // let res = await tables.pikabuComments.allDocs(options);
+    //
+    // res = res.rows.filter(row => !row.doc._id.startsWith("_"));
+    // res = res.map(async row => {
+    //     let pikabuComment = PikabuComment.fromPouchDbObject(row.doc);
+    //     if (includeTags) {
+    //         pikabuComment.tags = await getAllTagsByPikabuCommentId(pikabuComment.id);
+    //     }
+    //     return pikabuComment;
+    // });
+    //
+    // return await Promise.all(res);
+    /*if (fieldToOrder === "id") {
+        fieldToOrder = "_id";
+    }*/
+    fieldToOrder = "_id";
+    let selector = {
+        _id: {
+            $gt: 0,
+        },
+    };
+    if (onlyWithoutTags) {
+        selector["hasTags"] = {
+            $ne: "1",
+        };
+    }
+    let res = await tables.pikabuComments.find({
+        selector: selector,
+        sort: [fieldToOrder],
+        limit: limit,
+        skip: skip,
+    });
 
-    res = res.rows.filter(row => !row.doc._id.startsWith("_"));
+    res = res.docs.filter(row => !row._id.startsWith("_"));
+    console.log(res);
     res = res.map(async row => {
-        let pikabuComment = PikabuComment.fromPouchDbObject(row.doc);
+        let pikabuComment = PikabuComment.fromPouchDbObject(row);
         if (includeTags) {
             pikabuComment.tags = await getAllTagsByPikabuCommentId(pikabuComment.id);
         }
         return pikabuComment;
     });
+    res = await Promise.all(res);
 
-    return await Promise.all(res);
+    console.log(res);
+
+    return res;
 }
 
 /**
@@ -234,20 +275,33 @@ export async function makePikabuCommentTagRelationIfNotExists(commentId, tagId) 
     }
 
     // to be sure they exist
-    await tables.pikabuComments.get(commentId);
     await tables.tags.get(tagId);
+    await tables.pikabuComments.get(commentId);
 
     await tables.pikabuCommentTagRelation.putIfNotExists({_id: commentId + ":" + tagId});
     await tables.tagPikabuCommentRelation.putIfNotExists({_id: tagId + ":" + commentId});
+
+    // update field hasTags
+    const comment = await tables.pikabuComments.get(commentId);
+    comment.hasTags = "1";
+    await tables.pikabuComments.put(comment);
 
     return true;
 }
 
 export async function removePikabuCommentTagRelation(commentId, tagId) {
     log.debug("removePikabuCommentTagRelation(", commentId, ", ", tagId, ");");
+
     // to be sure they exist
     await tables.pikabuComments.get(commentId);
     await tables.tags.get(tagId);
+
+    const commentTags = await getAllTagsByPikabuCommentId(commentId);
+    if (commentTags.length === 0) {
+        const comment = await tables.pikabuComments.get(commentId);
+        comment.hasTags = "0";
+        await tables.pikabuComments.put(comment);
+    }
 
     {
         const doc = await tables.pikabuCommentTagRelation.get(commentId + ":" + tagId);
