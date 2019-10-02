@@ -4,6 +4,7 @@ import {default as pouchDBFind} from "pouchdb-find";
 import {default as pouchDBUpsert} from "pouchdb-upsert";
 import {default as pouchDBAllDbs} from "pouchdb-all-dbs";
 // import {default as pouchDBQuickSearch} from "pouchdb-quick-search";
+import * as log from "../misc/log";
 
 PouchDB.plugin(pouchDBFind);
 PouchDB.plugin(pouchDBUpsert);
@@ -119,9 +120,15 @@ export async function createPikabuCommentIfNotExists(
  * @returns {Promise<void>}
  */
 export async function deletePikabuCommentById(id) {
+    const tags = await getAllTagsByPikabuCommentId(id);
+    // why is this linter so dummy dumb?
+    // eslint-disable-next-line
+    for (const tag of tags) {
+        await removePikabuCommentTagRelation(id, tag.id);
+    }
+
     const doc = await tables.pikabuComments.get(id);
     await tables.pikabuComments.remove(doc);
-    const tags = await getAllTagsByPikabuCommentId(id);
 }
 
 /**
@@ -131,6 +138,12 @@ export async function deletePikabuCommentById(id) {
  * @returns {Promise<void>}
  */
 export async function deleteTagById(id) {
+    const pikabuComments = await getAllPikabuCommentsByTagId(id);
+    // eslint-disable-next-line
+    for (const pikabuComment of pikabuComments) {
+        await removePikabuCommentTagRelation(pikabuComment.id, id);
+    }
+
     const doc = await tables.tags.get(id);
     await tables.tags.remove(doc);
 }
@@ -141,7 +154,7 @@ function rowsToListOfTags(rows) {
             return row.doc;
         }
         return row;
-    }).filter(row => !row._id.startsWith("_")).map(row => {
+    }).filter(row => row !== null && !row._id.startsWith("_")).map(row => {
         let tag = new Tag();
         Object.assign(tag, row);
         tag.id = tag._id;
@@ -151,8 +164,6 @@ function rowsToListOfTags(rows) {
 
 async function getTags(options) {
     let res = await tables.tags.allDocs(options);
-
-    console.log(res);
 
     return rowsToListOfTags(res.rows);
 }
@@ -203,14 +214,8 @@ export async function getAllPikabuComments(includeTags) {
  * @returns {Promise<void>}
  */
 export async function dropDatabase() {
-    /*
-    // not sure why it thinks table is not used
-    // eslint-disable-next-line
-    for (let table of Object.keys(tables)) {
-        await tables[table].destroy();
-    }
-     */
     const dbs = await PouchDB.allDbs();
+    // eslint-disable-next-line
     for (const dbName of dbs) {
         await (new PouchDB(dbName)).destroy();
     }
@@ -239,6 +244,7 @@ export async function makePikabuCommentTagRelationIfNotExists(commentId, tagId) 
 }
 
 export async function removePikabuCommentTagRelation(commentId, tagId) {
+    log.debug("removePikabuCommentTagRelation(", commentId, ", ", tagId, ");");
     // to be sure they exist
     await tables.pikabuComments.get(commentId);
     await tables.tags.get(tagId);

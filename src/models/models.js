@@ -1,5 +1,3 @@
-import {getAllTagsByPikabuCommentId} from "./db";
-
 export class Tag {
     constructor(id, name) {
         this.id = id;

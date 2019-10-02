@@ -1,5 +1,4 @@
 import React from 'react';
-import Paper from "@material-ui/core/Paper";
 import * as rpc from "../misc/rpc";
 import * as log from "../misc/log";
 import {withAlert} from "react-alert";
@@ -50,7 +49,7 @@ class PikabuSaveCommentPopup extends React.Component {
                 commentData: this.props.commentData,
             });
         }
-        await this.updateTags();
+        this.updateTags();
     }
 
     async updateTags() {
@@ -267,9 +266,8 @@ class PikabuSaveCommentPopup extends React.Component {
                 <div className={classes.searchBar}>
                     <Input
                         id={"tagit__pikabuSaveCommentPopupInput"}
-                        className={classes.inputField}
+                        className={`${classes.inputField} tagit__pikabuSaveCommentPopupInput`}
                         disableUnderline={true}
-                        autoFocus={true}
                         value={this.state.inputText}
                         onChange={this.onInputChanged}
                         onKeyDown={this.onKeyDown}
@@ -278,7 +276,7 @@ class PikabuSaveCommentPopup extends React.Component {
                         className={classes.addNewTagButton}
                         color={"primary"}
                         onClick={this.onNewTagAddClicked}
-                        tabindex={"-1"}
+                        tabIndex={"-1"}
                     >
                         +
                     </Button>

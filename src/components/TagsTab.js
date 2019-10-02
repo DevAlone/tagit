@@ -5,6 +5,7 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import TopBar from './TopBar';
 
 import * as db from "../models/db";
+import * as log from "../misc/log";
 import {withAlert} from "react-alert";
 import Paper from "@material-ui/core/Paper";
 import ChipInput from "material-ui-chip-input";
@@ -44,8 +45,14 @@ class TagsTab extends Component {
             return;
         }
 
-        await db.deleteTagById(this.state.tags[index].id);
-        await this.updateTags();
+        try {
+            await db.deleteTagById(this.state.tags[index].id);
+            await this.updateTags();
+        } catch (e) {
+            log.error(e);
+            this.props.alert.error(e);
+            throw e;
+        }
     };
 
     render() {

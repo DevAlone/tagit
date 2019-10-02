@@ -6,14 +6,14 @@ import TopBar from './TopBar';
 
 import * as db from "../models/db";
 import * as log from "../misc/log";
-import Paper from "@material-ui/core/Paper";
 import Button from "@material-ui/core/Button";
 import {withAlert} from "react-alert";
 import Grid from "@material-ui/core/Grid";
 import PikabuComment from "./PikabuComment";
 import {Checkbox} from "@material-ui/core";
+import FormControlLabel from "@material-ui/core/FormControlLabel";
 
-const styles = theme => ({
+const styles = () => ({
     pikabuCommentContainer: {
         width: "100%",
         padding: "5px 10px",
@@ -22,6 +22,9 @@ const styles = theme => ({
     pikabuCommentDeleteButtonContainer: {
         display: "flex",
         justifyContent: "flex-end",
+    },
+    updateHint: {
+        color: "#888",
     }
 });
 
@@ -29,24 +32,36 @@ class PikabuTab extends Component {
     state = {
         comments: [],
         tags: [],
+        showOnlyCommentsWithoutTags: false,
     };
 
     componentDidMount() {
-        return this.updateAll();
+        this.updateAll();
+        document.getElementById("tagit__showOnlyCommentsWithoutTagsCheckbox").focus();
+        window.addEventListener("keydown", async e => {
+            if (e.key === "Escape") {
+                await this.updateAll();
+                const tagInput = document.querySelector(".tagit__pikabuSaveCommentPopupInput input");
+                if (tagInput !== null) {
+                    tagInput.focus();
+                }
+            }
+        });
     }
 
     async updateAll() {
-        await this.updateTags();
+        // await this.updateTags();
         await this.updateComments();
     }
 
     async updateComments() {
-        const pikabu_comments = await db.getAllPikabuComments(true);
-        console.log("pikabu_comments:");
-        console.log(pikabu_comments);
+        let pikabuComments = await db.getAllPikabuComments(true);
+        pikabuComments = pikabuComments.filter(comment => {
+            return !this.state.showOnlyCommentsWithoutTags || comment.tags.length === 0;
+        });
 
         await this.setState({
-            comments: await db.getAllPikabuComments(true),
+            comments: pikabuComments,
         });
     }
 
@@ -61,7 +76,6 @@ class PikabuTab extends Component {
             if (!window.confirm("Вы уверены, что хотите удалить комментарий " + id + " и снять с него все теги?")) {
                 return;
             }
-            await db.deleteTagById(id);
             await db.deletePikabuCommentById(id);
             this.props.alert.info("deleted successfully");
             await this.updateComments();
@@ -72,24 +86,7 @@ class PikabuTab extends Component {
             } else {
                 this.props.alert.error(JSON.stringify(e));
             }
-        }
-    }
-
-    async deleteTagById(id) {
-        try {
-            if (!window.confirm("Вы уверены, что хотите удалить тег " + id + " и снять его со всех комментариев?")) {
-                return;
-            }
-            await db.deleteTagById(id);
-            this.props.alert.info("deleted successfully");
-            await this.updateTags();
-        } catch (e) {
-            log.error(e);
-            if (e.hasOwnProperty("message")) {
-                this.props.alert.error(e.message);
-            } else {
-                this.props.alert.error(JSON.stringify(e));
-            }
+            throw e;
         }
     }
 
@@ -102,7 +99,25 @@ class PikabuTab extends Component {
                 <CssBaseline/>
                 <TopBar currentPath={currentPath}/>
                 <div className={classes.root}>
+                    <p className={classes.updateHint}>Нажмите Escape, чтобы обновить страницу</p>
                     <h1>Комментарии:</h1>
+                    <div>
+                        <FormControlLabel
+                            control={<Checkbox
+                                id={"tagit__showOnlyCommentsWithoutTagsCheckbox"}
+                                checked={this.state.showOnlyCommentsWithoutTags}
+                                onChange={async e => {
+                                    await this.setState({
+                                        showOnlyCommentsWithoutTags: e.target.checked,
+                                    });
+                                    await this.updateComments();
+                                }}
+                                color={"primary"}
+
+                            />}
+                            label={"Только без тегов"}
+                        />
+                    </div>
                     <Grid
                         container
                         direction="row"
@@ -113,7 +128,7 @@ class PikabuTab extends Component {
                             this.state.comments.map((comment, index) => {
                                 return (<div
                                     className={classes.pikabuCommentContainer}
-                                    key={index}
+                                    key={comment.id}
                                 >
                                     <div className={classes.pikabuCommentDeleteButtonContainer}>
                                         <Button

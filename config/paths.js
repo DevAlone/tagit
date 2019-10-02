@@ -86,6 +86,7 @@ module.exports = {
     //
     pikabuSaveCommentPopupJs: resolveModule(resolveApp, 'src/pikabuSaveCommentPopup'),
     backgroundRPCListenerJs: resolveModule(resolveApp, 'src/backgroundRPCListener'),
+    backgroundPikabuCommentsUpdater: resolveModule(resolveApp, 'src/backgroundPikabuCommentsUpdater'),
 };
 
 

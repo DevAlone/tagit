@@ -7,8 +7,8 @@ import * as react_alert from "react-alert";
 import {Provider as AlertProvider} from 'react-alert'
 import AlertTemplate from 'react-alert-template-basic'
 import * as rpc from "./misc/rpc";
-import {PikabuComment} from "./models/models";
 import Paper from "@material-ui/core/Paper";
+import {commentNodeToData} from "./misc/pikabu";
 
 const alertOptions = {
     position: react_alert.positions.BOTTOM_RIGHT,
@@ -40,34 +40,6 @@ document.body.appendChild(pikabuSaveButtonDialog);
 
 ReactDOM.render(<PikabuSaveCommentPopupRoot/>, pikabuSaveButtonDialog);
 
-
-function commentNodeToData(commentNode) {
-    const id = commentNode.getAttribute("data-id");
-    commentNode = commentNode.querySelector(".comment__body");
-    const commentLink = commentNode.querySelector('.comment__tools .comment__tool[data-role="link"]').href;
-    const storyId = commentLink.match(/^https?:\/\/.*pikabu.ru\/story\/.*_([0-9]+)\?cid=[0-9]+/i)[1];
-
-    let contentText = "";
-    {
-        let commentContent = commentNode.querySelector(".comment__content").cloneNode(true);
-        const images = commentContent.querySelectorAll(".comment-image");
-        for (const image of images) {
-            commentContent.removeChild(image);
-        }
-        contentText = commentContent.innerHTML;
-    }
-
-    return {
-        id: id,
-        commentLink: commentLink,
-        storyId: storyId,
-        authorUsername: commentNode.querySelector(".comment__user").getAttribute("data-name"),
-        createdAtDate: commentNode.querySelector(".comment__datetime").getAttribute("datetime"),
-        contentHTML: commentNode.querySelector(".comment__content").innerHTML,
-        contentText: contentText,
-        contentImages: Array.from(commentNode.querySelectorAll('.comment-image a')).map(x => x.href),
-    };
-}
 
 function getCommentContainerBlock(commentId) {
     return document.querySelector(".comments__main #comment_" + commentId).closest(".comments_show");
@@ -110,6 +82,11 @@ function getPlaceholderForHiddenComment(commentId) {
 }
 
 async function hideCommentIfNecessary(commentId) {
+    // TODO: complete or remove this feature
+    if (true) {
+        return;
+    }
+
     // hide comments if we're in comments page, comment has tags and user checked to do so
     log.debug("tryna hide a comment with id " + commentId);
 
@@ -244,7 +221,10 @@ async function addTagButton(comment) {
 }
 
 const observerCallback = (mutationsList, observer) => {
+    // not sure why it thinks mutation is not used
+    // eslint-disable-next-line
     for (let mutation of mutationsList) {
+        // eslint-disable-next-line
         for (let node of mutation.addedNodes) {
             if (node.className === "comment") {
                 addTagButton(node);
@@ -254,6 +234,7 @@ const observerCallback = (mutationsList, observer) => {
 };
 
 function startObserving() {
+    // eslint-disable-next-line
     for (let comment of document.querySelectorAll('.comment')) {
         addTagButton(comment);
     }

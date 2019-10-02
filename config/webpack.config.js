@@ -172,6 +172,7 @@ module.exports = function (webpackEnv) {
             ].filter(Boolean),
             pikabuSaveCommentPopup: paths.pikabuSaveCommentPopupJs,
             backgroundRPCListener: paths.backgroundRPCListenerJs,
+            backgroundPikabuCommentsUpdater: paths.backgroundPikabuCommentsUpdater,
         },
         output: {
             // The build folder.

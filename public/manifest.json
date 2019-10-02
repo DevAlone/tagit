@@ -20,7 +20,8 @@
     "scripts": [
       "app/browser-polyfill.min.js",
       "app/background.js",
-      "static/js/backgroundRPCListener.js"
+      "static/js/backgroundRPCListener.js",
+      "static/js/backgroundPikabuCommentsUpdater.js"
     ]
   },
   "content_scripts": [
