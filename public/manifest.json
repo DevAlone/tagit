@@ -2,16 +2,13 @@
   "manifest_version": 2,
   "name": "tagit",
   "version": "0.1",
-  "applications": {
-    "gecko": {
-      "id": "tagit@d3d.info"
-    }
+  "homepage_url": "https://github.com/DevAlone/tagit",
+  "icons": {
+    "48": "logo.png"
   },
   "permissions": [
     "storage",
     "unlimitedStorage",
-    "webRequest",
-    "webRequestBlocking",
     "*://*.pikabu.ru/*",
     "*://pikabu.ru/*"
   ],
@@ -42,7 +39,7 @@
   "browser_action": {
     "browser_style": true,
     "default_icon": {
-      "16": "logo512.png"
+      "16": "logo.png"
     }
   },
   "options_ui": {

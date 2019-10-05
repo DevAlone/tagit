@@ -17,7 +17,7 @@ import {Link as MaterialLink} from '@material-ui/core';
 import Menu from './Menu';
 import {routes} from '../routes';
 
-const logo = require('../images/logo.svg');
+const logo = require('../images/logo.png');
 
 const styles = theme => ({
     appBar: {
