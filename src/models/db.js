@@ -220,7 +220,6 @@ export async function getPikabuComments(fieldToOrder, reversedOrdering, onlyWith
     });
 
     res = res.docs.filter(row => !row._id.startsWith("_"));
-    console.log(res);
     res = res.map(async row => {
         let pikabuComment = PikabuComment.fromPouchDbObject(row);
         if (includeTags) {
@@ -229,8 +228,6 @@ export async function getPikabuComments(fieldToOrder, reversedOrdering, onlyWith
         return pikabuComment;
     });
     res = await Promise.all(res);
-
-    console.log(res);
 
     return res;
 }

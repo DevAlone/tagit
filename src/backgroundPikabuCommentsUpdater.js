@@ -14,7 +14,9 @@ async function processSavedCommentsPage(page) {
     log.info("processSavedCommentsPage(" + page + ");");
 
     const result = await fetch("https://pikabu.ru/saved-comments?cmd=saved_comments&page=" + page);
-    const html = await result.text();
+    const binaryResp = (await result.arrayBuffer());
+    const decoder = new TextDecoder("windows-1251");
+    const html = decoder.decode(binaryResp);
     const dom = (new DOMParser()).parseFromString(html, "text/html");
     const comments = dom.querySelectorAll('.page-comments[data-role="saved"] .comments__main .comment');
     log.debug("page " + page + " has " + comments.length + " comments");
