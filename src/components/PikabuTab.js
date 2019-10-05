@@ -3,7 +3,7 @@ import withStyles from '@material-ui/styles/withStyles';
 import {withRouter} from 'react-router-dom';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import TopBar from './TopBar';
-
+import InfiniteScroll from 'react-infinite-scroller';
 import * as db from "../models/db";
 import * as log from "../misc/log";
 import Button from "@material-ui/core/Button";
@@ -14,8 +14,13 @@ import {Checkbox} from "@material-ui/core";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 
 const styles = () => ({
+    root: {
+        minHeight: 2000,
+        padding: 10,
+    },
     pikabuCommentContainer: {
-        width: "100%",
+        // width: "100%",
+        maxWidth: "1000px",
         padding: "5px 10px",
     },
     pikabuComment: {},
@@ -25,22 +30,25 @@ const styles = () => ({
     },
     updateHint: {
         color: "#888",
-    }
+    },
 });
+
+const NUMBER_OF_COMMENTS_PER_PAGE = 10;
 
 class PikabuTab extends Component {
     state = {
         comments: [],
         tags: [],
         showOnlyCommentsWithoutTags: false,
+        hasMoreComments: true,
+        offset: 0,
     };
 
     componentDidMount() {
-        this.updateAll();
         document.getElementById("tagit__showOnlyCommentsWithoutTagsCheckbox").focus();
         window.addEventListener("keydown", async e => {
             if (e.key === "Escape") {
-                await this.updateAll();
+                await this.updateComments();
                 const tagInput = document.querySelector(".tagit__pikabuSaveCommentPopupInput input");
                 if (tagInput !== null) {
                     tagInput.focus();
@@ -49,37 +57,44 @@ class PikabuTab extends Component {
         });
     }
 
-    async updateAll() {
-        // await this.updateTags();
-        await this.updateComments();
-    }
-
-    async updateComments() {
-        // let pikabuComments = await db.getAllPikabuComments(true);
+    loadMoreComments = async () => {
         let pikabuComments = await db.getPikabuComments(
             "id",
             false,
             this.state.showOnlyCommentsWithoutTags,
             true,
-            10,
-            0,
+            NUMBER_OF_COMMENTS_PER_PAGE,
+            this.state.offset,
         );
 
-        pikabuComments = pikabuComments.filter(comment => {
-            return !this.state.showOnlyCommentsWithoutTags || comment.tags.length === 0;
+        // pikabuComments = pikabuComments.filter(comment => {
+        //     return !this.state.showOnlyCommentsWithoutTags || comment.tags.length === 0;
+        // });
+
+        log.debug("comments: ", pikabuComments);
+
+        await this.setState(prevState => {
+            prevState.comments = prevState.comments.concat(pikabuComments);
+            prevState.offset += NUMBER_OF_COMMENTS_PER_PAGE;
+            if (pikabuComments.length === 0) {
+                prevState.hasMoreComments = false;
+            }
+
+            return prevState;
         });
 
-        log.debug(pikabuComments);
+        // await this.setState({
+        //     comments: pikabuComments,
+        // });
+    };
 
+    async updateComments() {
         await this.setState({
-            comments: pikabuComments,
+            comments: [],
+            hasMoreComments: true,
+            offset: 0,
         });
-    }
-
-    async updateTags() {
-        await this.setState({
-            tags: await db.getAllTags(),
-        });
+        await this.loadMoreComments();
     }
 
     async deletePikabuCommentById(id) {
@@ -129,34 +144,43 @@ class PikabuTab extends Component {
                             label={"Только без тегов"}
                         />
                     </div>
-                    <Grid
-                        container
-                        direction="row"
-                        justify="space-around"
-                        alignItems="stretch"
+                    <InfiniteScroll
+                        pageStart={0}
+                        loadMore={this.loadMoreComments}
+                        hasMore={this.state.hasMoreComments}
+                        loader={<div key={0}>
+                            Загружаем комментарии...
+                        </div>}
                     >
-                        {
-                            this.state.comments.map((comment, index) => {
-                                return (<div
-                                    className={classes.pikabuCommentContainer}
-                                    key={comment.id}
-                                >
-                                    <div className={classes.pikabuCommentDeleteButtonContainer}>
-                                        <Button
-                                            onClick={async () => {
-                                                await this.deletePikabuCommentById(comment.id)
-                                            }}>
-                                            Удалить
-                                        </Button>
-                                    </div>
-                                    <PikabuComment
-                                        className={classes.pikabuComment}
-                                        data={comment} key={index}
-                                    />
-                                </div>);
-                            })
-                        }
-                    </Grid>
+                        <Grid
+                            container
+                            direction="row"
+                            justify="center"
+                            alignItems="stretch"
+                        >
+                            {
+                                this.state.comments.map((comment, index) => {
+                                    return (<div
+                                        className={classes.pikabuCommentContainer}
+                                        key={comment.id}
+                                    >
+                                        <div className={classes.pikabuCommentDeleteButtonContainer}>
+                                            <Button
+                                                onClick={async () => {
+                                                    await this.deletePikabuCommentById(comment.id)
+                                                }}>
+                                                Удалить
+                                            </Button>
+                                        </div>
+                                        <PikabuComment
+                                            className={classes.pikabuComment}
+                                            data={comment} key={index}
+                                        />
+                                    </div>);
+                                })
+                            }
+                        </Grid>
+                    </InfiniteScroll>
                 </div>
             </React.Fragment>
         )

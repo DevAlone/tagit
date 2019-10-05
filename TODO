@@ -1,4 +1,4 @@
-exporting and importing db to file
+exporting and importing db to a file
 full text search https://github.com/pouchdb-community/pouchdb-quick-search
 syncronization. Review these links:
 	https://github.com/pouchdb-community/pouchdb-replication-stream
@@ -7,5 +7,4 @@ syncronization. Review these links:
 	https://github.com/pgte/pouch-remote-stream#readme
 	https://github.com/pgte/pouch-stream-server#readme
 
-fix encoding
-fix comment https://pikabu.ru/story/pryizhok_v_bezdnu_5664127?cid=105635080 (does not have any images in pouchdb)
+save comment images as blobs in a database

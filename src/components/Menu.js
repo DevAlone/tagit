@@ -21,7 +21,7 @@ const Menu = [
     },
     {
         label: "Github",
-        pathname: "https://github.com/",
+        pathname: "https://github.com/DevAlone/tagit",
         external: true
     }
 

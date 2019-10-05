@@ -1,5 +1,20 @@
 # tagit
 
+Tagit is an extension which allows you to organize content in the WEB using tags. Right now it only supports comments on pikabu.ru.
+
+# How to debug locally
+
+1 Clone this repository
+2 install dependencies 
+`npm install`
+3 run watch.sh
+`./watch.sh`
+4 load `./build/manifest.json` using your favorite browser(Firefox or Chrome)
+
+# How to contribute
+
+Just fix/implement what you want and make a pull request. Thanks :)
+
 # Mirrors
 
 - https://github.com/DevAlone/tagit
