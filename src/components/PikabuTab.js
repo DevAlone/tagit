@@ -69,6 +69,8 @@ class PikabuTab extends Component {
             return !this.state.showOnlyCommentsWithoutTags || comment.tags.length === 0;
         });
 
+        log.debug(pikabuComments);
+
         await this.setState({
             comments: pikabuComments,
         });

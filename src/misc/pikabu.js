@@ -16,6 +16,15 @@ export function commentNodeToData(commentNode) {
         contentText = commentContent.innerHTML;
     }
 
+    let contentImages = Array.from(
+        commentNode.querySelectorAll(".comment-image")
+    ).map(node => node.querySelector("div")).map(imageNode => {
+        if (imageNode.hasAttribute("data-source")) {
+            return imageNode.getAttribute("data-source");
+        }
+        return imageNode.querySelector("a").getAttribute("href");
+    });
+
     return {
         id: id,
         commentLink: commentLink,
@@ -24,6 +33,6 @@ export function commentNodeToData(commentNode) {
         createdAtDate: commentNode.querySelector(".comment__datetime").getAttribute("datetime"),
         contentHTML: commentNode.querySelector(".comment__content").innerHTML,
         contentText: contentText,
-        contentImages: Array.from(commentNode.querySelectorAll('.comment-image a')).map(x => x.href),
+        contentImages: contentImages,
     };
 }

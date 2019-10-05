@@ -271,6 +271,7 @@ class PikabuSaveCommentPopup extends React.Component {
                         value={this.state.inputText}
                         onChange={this.onInputChanged}
                         onKeyDown={this.onKeyDown}
+                        placeholder={"Введите тег и нажмите Enter"}
                     />
                     <Button
                         className={classes.addNewTagButton}

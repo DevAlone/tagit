@@ -1,6 +1,5 @@
 import * as log from "./misc/log";
 import {commentNodeToData} from "./misc/pikabu";
-import * as rpc from "./misc/rpc";
 import {createPikabuCommentIfNotExists} from "./models/db";
 
 log.debug("backgroundPikabuCommentsUpdater.js");
