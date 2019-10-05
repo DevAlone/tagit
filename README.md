@@ -11,6 +11,14 @@ Tagit is an extension which allows you to organize content in the WEB using tags
 `./watch.sh`
 4 load `./build/manifest.json` using your favorite browser(Firefox or Chrome)
 
+# How to build a production version
+
+1 Clone this repository
+2 install dependencies 
+`npm install`
+3 build
+`npm run build`
+
 # How to contribute
 
 Just fix/implement what you want and make a pull request. Thanks :)
