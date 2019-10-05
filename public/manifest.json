@@ -6,6 +6,12 @@
   "icons": {
     "48": "logo.png"
   },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "tagit@d3d.info",
+      "strict_min_version": "42.0"
+    }
+  },
   "permissions": [
     "storage",
     "unlimitedStorage",
