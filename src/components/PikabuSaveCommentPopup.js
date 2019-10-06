@@ -163,7 +163,7 @@ class PikabuSaveCommentPopup extends React.Component {
         await this.setState({
             inputText: event.target.value,
         });
-        // TODO: debounce
+        // TODO: debounce?
         await this.updateTags();
     };
 

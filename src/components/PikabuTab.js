@@ -12,6 +12,7 @@ import Grid from "@material-ui/core/Grid";
 import PikabuComment from "./PikabuComment";
 import {Checkbox} from "@material-ui/core";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
+import Input from "@material-ui/core/Input";
 
 const styles = () => ({
     root: {
@@ -19,7 +20,6 @@ const styles = () => ({
         padding: 10,
     },
     pikabuCommentContainer: {
-        // width: "100%",
         maxWidth: "1000px",
         padding: "5px 10px",
     },
@@ -31,6 +31,12 @@ const styles = () => ({
     updateHint: {
         color: "#888",
     },
+    tagsSearch: {
+        display: "flex",
+    },
+    tagsSearchInput: {
+        flexGrow: 1,
+    },
 });
 
 const NUMBER_OF_COMMENTS_PER_PAGE = 10;
@@ -38,10 +44,10 @@ const NUMBER_OF_COMMENTS_PER_PAGE = 10;
 class PikabuTab extends Component {
     state = {
         comments: [],
-        tags: [],
         showOnlyCommentsWithoutTags: false,
         hasMoreComments: true,
         offset: 0,
+        searchText: "",
     };
 
     componentDidMount() {
@@ -67,21 +73,30 @@ class PikabuTab extends Component {
             this.state.offset,
         );
 
+        const hasMoreComments = pikabuComments.length > 0;
+
+        const searchText = this.state.searchText.trim();
+
+        if (searchText.length > 0) {
+            pikabuComments = pikabuComments.filter(comment => {
+                for (const tag of comment.tags) {
+                    if (tag.name.toLowerCase().includes(this.state.searchText)) {
+                        return true;
+                    }
+                }
+                return false;
+            });
+        }
+
         log.debug("comments: ", pikabuComments);
 
         await this.setState(prevState => {
             prevState.comments = prevState.comments.concat(pikabuComments);
             prevState.offset += NUMBER_OF_COMMENTS_PER_PAGE;
-            if (pikabuComments.length === 0) {
-                prevState.hasMoreComments = false;
-            }
+            prevState.hasMoreComments = hasMoreComments;
 
             return prevState;
         });
-
-        // await this.setState({
-        //     comments: pikabuComments,
-        // });
     };
 
     async updateComments() {
@@ -90,7 +105,6 @@ class PikabuTab extends Component {
             hasMoreComments: true,
             offset: 0,
         });
-        await this.loadMoreComments();
     }
 
     async deletePikabuCommentById(id) {
@@ -112,6 +126,43 @@ class PikabuTab extends Component {
         }
     }
 
+    onWithoutTagsCheckboxChanged = async (e) => {
+        const isChecked = e.target.checked;
+        await this.setState({
+            showOnlyCommentsWithoutTags: isChecked,
+        });
+        if (isChecked) {
+            await this.setState({
+                searchText: "",
+            });
+        }
+        await this.updateComments();
+    };
+
+    onSearchTextChangedTimeoutHandle = null;
+    onSearchTextChanged = (e) => {
+        const searchText = e.target.value;
+
+        (async () => {
+            await this.setState({
+                searchText: searchText,
+            });
+
+            if (this.onSearchTextChangedTimeoutHandle !== null) {
+                clearTimeout(this.onSearchTextChangedTimeoutHandle);
+            }
+            this.onSearchTextChangedTimeoutHandle = setTimeout(async () => {
+                if (this.state.searchText.length > 0) {
+                    await this.setState({
+                        showOnlyCommentsWithoutTags: false,
+                    });
+                }
+                await this.updateComments();
+                this.onSearchTextChangedTimeoutHandle = null;
+            }, 400);
+        })();
+    };
+
     render() {
         const {classes} = this.props;
         const currentPath = this.props.location.pathname;
@@ -123,23 +174,25 @@ class PikabuTab extends Component {
                 <div className={classes.root}>
                     <p className={classes.updateHint}>Нажмите Escape, чтобы обновить страницу</p>
                     <h1>Комментарии:</h1>
-                    <div>
+                    <div className={classes.tagsSearch}>
                         <FormControlLabel
                             control={<Checkbox
                                 id={"tagit__showOnlyCommentsWithoutTagsCheckbox"}
                                 checked={this.state.showOnlyCommentsWithoutTags}
-                                onChange={async e => {
-                                    await this.setState({
-                                        showOnlyCommentsWithoutTags: e.target.checked,
-                                    });
-                                    await this.updateComments();
-                                }}
+                                onChange={this.onWithoutTagsCheckboxChanged}
                                 color={"primary"}
 
                             />}
                             label={"Только без тегов"}
                         />
+                        <Input
+                            className={classes.tagsSearchInput}
+                            value={this.state.searchText}
+                            onChange={this.onSearchTextChanged}
+                            placeholder={"Введите тег для поиска"}
+                        />
                     </div>
+
                     <InfiniteScroll
                         pageStart={0}
                         loadMore={this.loadMoreComments}
