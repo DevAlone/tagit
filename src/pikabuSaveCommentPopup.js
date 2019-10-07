@@ -120,6 +120,9 @@ async function hideCommentIfNecessary(commentId) {
 }
 
 async function hideLastTaggedCommentIfNecessary() {
+    if (typeof PikabuSaveCommentPopupRoot.pikabuSaveCommentPopupInstance.current.state.commentData === "undefined") {
+        return;
+    }
     // hide comments if we're in comments page, comment has tags and user checked to do so
     await hideCommentIfNecessary(
         PikabuSaveCommentPopupRoot.pikabuSaveCommentPopupInstance.current.state.commentData.id
@@ -187,7 +190,8 @@ async function addTagButton(comment) {
             }
         }
 
-        const openSaveCommentPopup = e => {
+        const openSaveCommentPopup = async e => {
+            await closePikabuSaveButtonDialog();
             PikabuSaveCommentPopupRoot.pikabuSaveCommentPopupInstance.current.setState({
                 commentId: id,
                 commentData: commentData,
