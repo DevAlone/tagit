@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+rm tagit*.zip
 npm run build
 cd build
 zip -r tagit.zip *
