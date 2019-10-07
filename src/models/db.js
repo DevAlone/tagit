@@ -44,6 +44,9 @@ createIndices();
  */
 export async function createTagIfNotExists(name) {
     name = name.trim();
+    if (name.length === 0) {
+        throw new Error("You should not create an empty tag");
+    }
     let tags = await tables.tags.find({
         selector: {
             name: name,

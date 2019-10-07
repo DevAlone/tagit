@@ -126,6 +126,10 @@ class PikabuSaveCommentPopup extends React.Component {
     }
 
     onNewTagAddClicked = async () => {
+        if (this.state.inputText.trim().length === 0) {
+            return;
+        }
+
         await this.withAlertError(async () => {
             const wasSaved = await rpc.callFromContentScript(
                 "models/db.js",
