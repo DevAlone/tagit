@@ -55,10 +55,14 @@ class PikabuTab extends Component {
         window.addEventListener("keydown", async e => {
             if (e.key === "Escape") {
                 await this.updateComments();
-                const tagInput = document.querySelector(".tagit__pikabuSaveCommentPopupInput input");
-                if (tagInput !== null) {
-                    tagInput.focus();
-                }
+                setTimeout(() => {
+                    let tagInput = document.querySelector(".tagit__pikabuSaveCommentPopupInput input");
+                    if (tagInput !== null) {
+                        tagInput.focus();
+                    } else {
+                        log.error("unable to focus, tagInput is null");
+                    }
+                }, 250);
             }
         });
     }
