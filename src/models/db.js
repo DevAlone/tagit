@@ -137,6 +137,8 @@ export async function deletePikabuCommentById(id) {
 
     const doc = await tables.pikabuComments.get(id);
     await tables.pikabuComments.remove(doc);
+
+    return true;
 }
 
 /**
@@ -146,14 +148,19 @@ export async function deletePikabuCommentById(id) {
  * @returns {Promise<void>}
  */
 export async function deleteTagById(id) {
+    log.debug("deleteTagById(" + id + ");");
     const pikabuComments = await getAllPikabuCommentsByTagId(id);
     // eslint-disable-next-line
+    log.debug("removing relations");
     for (const pikabuComment of pikabuComments) {
         await removePikabuCommentTagRelation(pikabuComment.id, id);
     }
 
+    log.debug("deleting tag itself");
     const doc = await tables.tags.get(id);
     await tables.tags.remove(doc);
+
+    return true;
 }
 
 function rowsToListOfTags(rows) {
@@ -303,13 +310,23 @@ export async function removePikabuCommentTagRelation(commentId, tagId) {
         await tables.pikabuComments.put(comment);
     }
 
-    {
+    try {
         const doc = await tables.pikabuCommentTagRelation.get(commentId + ":" + tagId);
         await tables.pikabuCommentTagRelation.remove(doc);
+    } catch (e) {
+        if (!e.hasOwnProperty("status") || e.status !== 404) {
+            log.debug("relation '" + commentId + ":" + tagId + "' does not exist");
+            throw e;
+        }
     }
-    {
+    try {
         const doc = await tables.tagPikabuCommentRelation.get(tagId + ":" + commentId);
         await tables.tagPikabuCommentRelation.remove(doc);
+    } catch (e) {
+        if (!e.hasOwnProperty("status") || e.status !== 404) {
+            log.debug("relation '" + tagId + ":" + commentId + "' does not exist");
+            throw e;
+        }
     }
 
     return true;
