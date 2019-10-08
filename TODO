@@ -10,3 +10,4 @@ syncronization. Review these links:
 save comment images as blobs in a database
 fix bug when field is not cleared after choosing a tag
 fix bug with pages parsing
+store number of comments for each tag
