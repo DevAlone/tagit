@@ -11,9 +11,6 @@ PouchDB.plugin(pouchDBUpsert);
 PouchDB.plugin(pouchDBAllDbs);
 // PouchDB.plugin(pouchDBQuickSearch);
 
-
-// TODO: delete relations when deleting comments and tags
-
 let tables = {
     tags: new PouchDB("tags"),
     pikabuComments: new PouchDB("pikabu_comments"),
@@ -34,7 +31,12 @@ function createIndices() {
     });
 }
 
-createIndices();
+function init() {
+    createIndices();
+}
+
+init();
+
 
 /**
  * creates a new tag with name or does nothing if tag exists
@@ -378,4 +380,41 @@ export async function getAllPikabuCommentsByTagId(tagId) {
         include_docs: true,
         keys: ids,
     }, false);
+}
+
+/**
+ * returns total number of pikabu comments saved in db
+ *
+ * @returns {Promise<void>}
+ */
+export async function getNumberOfPikabuComments() {
+    const info = await tables.pikabuComments.info();
+    log.debug("info1: ", info);
+    return info.doc_count;
+}
+
+/**
+ * returns total number of pikabu comments saved in db which have tags
+ *
+ * @returns {Promise<void>}
+ */
+export async function getNumberOfPikabuCommentsWithTags() {
+    const info = await tables.pikabuCommentTagRelation.info();
+    const numberOfRelations = info.doc_count;
+    if (numberOfRelations != (await tables.tagPikabuCommentRelation.info()).doc_count) {
+        log.error(`something is broken, call the developer: 
+            numberOfRelations != (await tables.tagPikabuCommentRelation.info()).doc_count`);
+    }
+    return numberOfRelations;
+}
+
+/**
+ * returns total number of tags saved in db
+ *
+ * @returns {Promise<void>}
+ */
+export async function getNumberOfTags() {
+    const info = await tables.tags.info();
+    log.debug("info3: ", info);
+    return info.doc_count;
 }

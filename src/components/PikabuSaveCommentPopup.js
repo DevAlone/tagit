@@ -38,6 +38,11 @@ class PikabuSaveCommentPopup extends React.Component {
         inputText: "",
     };
 
+    constructor(props) {
+        super(props);
+        this.inputFieldRef = React.createRef();
+    }
+
     async componentDidMount() {
         if (this.props.commentId !== null) {
             await this.setState({
@@ -152,8 +157,6 @@ class PikabuSaveCommentPopup extends React.Component {
             [this.state.inputText],
         );
 
-        console.log(tags);
-
         await this.onTagClicked(tags[0]);
 
         await this.setState({
@@ -210,6 +213,10 @@ class PikabuSaveCommentPopup extends React.Component {
 
             if (wasSaved) {
                 log.info("tag comment relation " + this.state.commentId + ":" + tag.id + " saved successfully");
+                await this.setState({
+                    inputText: "",
+                });
+                this.inputFieldRef.current.querySelector("input").focus();
             } else {
                 log.info("tag comment relation " + this.state.commentId + ":" + tag.id + " already existed");
             }
@@ -269,6 +276,7 @@ class PikabuSaveCommentPopup extends React.Component {
                 </div>
                 <div className={classes.searchBar}>
                     <Input
+                        ref={this.inputFieldRef}
                         id={"tagit__pikabuSaveCommentPopupInput"}
                         className={`${classes.inputField} tagit__pikabuSaveCommentPopupInput`}
                         disableUnderline={true}

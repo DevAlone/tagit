@@ -49,7 +49,7 @@
     }
   },
   "options_ui": {
-    "page": "index.html",
+    "page": "index.html#/settings",
     "browser_style": true
   }
 }

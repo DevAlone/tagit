@@ -8,6 +8,8 @@ import Grid from '@material-ui/core/Grid';
 
 import TopBar from './TopBar';
 import Link from "@material-ui/core/Link";
+import * as db from "../models/db";
+import * as log from "../misc/log";
 
 const styles = theme => ({
     root: {
@@ -29,6 +31,7 @@ const styles = theme => ({
         padding: theme.spacing(3),
         textAlign: 'left',
         color: theme.palette.text.secondary,
+        marginBottom: 10,
     },
     rangeLabel: {
         display: 'flex',
@@ -77,6 +80,35 @@ const styles = theme => ({
 });
 
 class HomeTab extends Component {
+    state = {
+        totalNumberOfPikabuComments: "loading...",
+        totalNumberOfTags: "loading...",
+        totalNumberOfPikabuCommentsWithTags: "loading...",
+        storageEstimate: {
+            quota: "loading...",
+            usage: "loading...",
+        },
+    };
+
+    async componentDidMount() {
+        this.setState({
+            totalNumberOfPikabuComments: await db.getNumberOfPikabuComments(),
+        });
+        this.setState({
+            totalNumberOfPikabuCommentsWithTags: await db.getNumberOfPikabuCommentsWithTags(),
+        });
+        this.setState({
+            totalNumberOfTags: await db.getNumberOfTags(),
+        });
+        this.setState({
+            storageEstimate: await window.navigator.storage.estimate(),
+        });
+    }
+
+    bytesToMiB(bytes) {
+        return bytes / 1024 / 1024;
+    }
+
     render() {
         const {classes} = this.props;
         return (
@@ -120,6 +152,31 @@ class HomeTab extends Component {
                                                 </Link>
                                             </Typography>
                                         </div>
+                                    </Paper>
+                                    <Paper className={classes.paper}>
+                                        <Typography color='secondary' gutterBottom>
+                                            Немного статистики
+                                        </Typography>
+                                        <Typography variant="body1" gutterBottom>
+                                            Комментариев с Пикабу: {this.state.totalNumberOfPikabuComments}
+                                        </Typography>
+                                        <Typography variant="body1" gutterBottom>
+                                            Тегов: {this.state.totalNumberOfTags}
+                                        </Typography>
+                                        <Typography variant="body1" gutterBottom>
+                                            Комментариев с Пикабу с
+                                            тегами: {this.state.totalNumberOfPikabuCommentsWithTags}
+                                        </Typography>
+                                        <Typography variant="body1" gutterBottom>
+                                            БД
+                                            занимает {this.bytesToMiB(this.state.storageEstimate.usage).toFixed(3)} Мб
+                                            на диске, это<span> </span>
+                                            {(
+                                                this.state.storageEstimate.usage / this.state.storageEstimate.quota
+                                            ).toFixed(3)} %
+                                            от доступных<span> </span>
+                                            {this.bytesToMiB(this.state.storageEstimate.quota).toFixed(3)} Мб
+                                        </Typography>
                                     </Paper>
                                 </Grid>
                             </Grid>

@@ -18,7 +18,13 @@ export function commentNodeToData(commentNode) {
 
     let contentImages = Array.from(
         commentNode.querySelectorAll(".comment-image")
-    ).map(node => node.querySelector("div")).map(imageNode => {
+    ).map(node => {
+        const child = node.querySelector("div");
+        if (child !== null) {
+            return child;
+        }
+        return node;
+    }).map(imageNode => {
         if (imageNode.hasAttribute("data-source")) {
             return imageNode.getAttribute("data-source");
         }
