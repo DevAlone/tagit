@@ -2,6 +2,11 @@
 
 Tagit is an extension which allows you to organize content in the WEB using tags. Right now it only supports comments on pikabu.ru.
 
+# How to just use it
+
+- Install on Firefox - https://addons.mozilla.org/en-US/firefox/addon/tagit/
+- Install on Chrome -  coming soon...
+
 # How to debug locally
 
 0. IMPORTANT for Firefox users. Set keepUuidOnUninstall and keepStorageOnUninstall to true in about:config to prevent Firefox from deleting database when you delete temporarily version of this extension https://stackoverflow.com/questions/58284797/how-to-prevent-firefox-from-removing-my-extensions-data-when-i-remove-debug-ver
