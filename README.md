@@ -23,7 +23,13 @@ Tagit is an extension which allows you to organize content in the WEB using tags
 2. install dependencies 
 `npm install`
 3. build
-`npm run build`
+`./build.sh`
+
+It will generate next files and directories:
+
+- build/ - production version of the extension
+- tagit.zip - zipped production version of the extension
+- tagit_src.zip - source code
 
 # How to contribute
 
