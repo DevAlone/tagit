@@ -1,6 +1,6 @@
 exporting and importing db to a file
 full text search https://github.com/pouchdb-community/pouchdb-quick-search
-syncronization. Review these links:
+synchronization. Review these links:
 	https://github.com/pouchdb-community/pouchdb-replication-stream
 	https://github.com/calvinmetcalf/PouchStream
 	https://github.com/pgte/pouch-websocket-sync
@@ -10,5 +10,5 @@ syncronization. Review these links:
 save comment images as blobs in a database
 store number of comments for each tag
 translate the interface
-
 add telegram support?
+tags hierarchy?

@@ -8,7 +8,7 @@ import {Provider as AlertProvider} from 'react-alert'
 import AlertTemplate from 'react-alert-template-basic'
 import * as rpc from "./misc/rpc";
 import Paper from "@material-ui/core/Paper";
-import {commentNodeToData} from "./misc/pikabu";
+import {commentNodeToData, processSavedCommentsPage} from "./misc/pikabu";
 
 const alertOptions = {
     position: react_alert.positions.BOTTOM_RIGHT,
@@ -255,8 +255,67 @@ function startObserving() {
     log.info("observing new comments started");
 }
 
+(async () => {
+    try {
+        function getLogNode(level, ...args) {
+            let logNode = document.createElement("p");
+            logNode.textContent = [level, ...args].join(" ");
+            return logNode;
+        }
+
+        if (window.location.href === "https://pikabu.ru/information/contacts#special_url_for_tagit_iengekou1Chai4Ese1EPei9seehee0oe") {
+            // TODO: remove this workaround in version 79 https://bugs.chromium.org/p/chromium/issues/detail?id=617198
+            document.body.innerHTML = `
+                <h1>Загрузка комментариев с Пикабу</h1>
+                <div id="tagit__loadingCommentsLogs"></div>
+            `;
+            let logsContainer = document.querySelector("#tagit__loadingCommentsLogs");
+            let styles = document.createElement("style");
+            document.head.appendChild(styles);
+            styles.type = "text/css";
+            styles.appendChild(document.createTextNode(`
+                #tagit__loadingCommentsLogs > * {
+                    color: #777;
+                }
+                #tagit__loadingCommentsLogs > :first-child {
+                    color: #000 !important;
+                }
+            `));
+            let totalNumberOfComments = 0;
+            for (let i = 1; i < 999; ++i) {
+                logsContainer.prepend(getLogNode("info", "Загружаем страницу ", i, "..."));
+                try {
+                    const numberOfSavedComments = await processSavedCommentsPage(i, true);
+                    totalNumberOfComments += numberOfSavedComments;
+                    logsContainer.prepend(getLogNode(
+                        "info", "Страница ", i, "содержит", numberOfSavedComments, "комментариев",
+                    ));
+                    if (numberOfSavedComments === 0) {
+                        logsContainer.prepend(getLogNode(
+                            "info", "Всего комментариев: ", totalNumberOfComments,
+                        ));
+                        let endMessage = document.createElement("h2");
+                        endMessage.textContent = "Загрузка комментариев завершена. Можете закрыть вкладку";
+                        logsContainer.prepend(endMessage);
+                        return;
+                    }
+                } catch (e) {
+                    logsContainer.prepend(getLogNode(
+                        "error", "Ошибка во время загрузки комментариев: ", e,
+                    ));
+                    throw e;
+                }
+            }
+        }
+    } catch (e) {
+        log.error(e);
+        throw e;
+    }
+})();
+
+
 try {
-    startObserving()
+    startObserving();
 } catch (e) {
     log.error("tagit: error:");
     log.error(e);

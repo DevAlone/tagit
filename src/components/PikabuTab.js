@@ -13,6 +13,7 @@ import PikabuComment from "./PikabuComment";
 import {Checkbox} from "@material-ui/core";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import Input from "@material-ui/core/Input";
+import ChromeWarning from "./ChromeWarning";
 
 const styles = () => ({
     root: {
@@ -176,6 +177,7 @@ class PikabuTab extends Component {
                 <CssBaseline/>
                 <TopBar currentPath={currentPath}/>
                 <div className={classes.root}>
+                    <ChromeWarning/>
                     <p className={classes.updateHint}>Нажмите Escape, чтобы обновить страницу</p>
                     <h1>Комментарии:</h1>
                     <div className={classes.tagsSearch}>

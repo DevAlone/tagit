@@ -10,6 +10,7 @@ import TopBar from './TopBar';
 import Link from "@material-ui/core/Link";
 import * as db from "../models/db";
 import * as log from "../misc/log";
+import ChromeWarning from "./ChromeWarning";
 
 const styles = theme => ({
     root: {
@@ -116,6 +117,7 @@ class HomeTab extends Component {
                 <CssBaseline/>
                 <TopBar/>
                 <div className={classes.root}>
+                    <ChromeWarning/>
                     <Grid container justify="center">
                         <Grid spacing={4} alignItems="center" justify="center" container className={classes.grid}>
                             <Grid container item xs={12}>

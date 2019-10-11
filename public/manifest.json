@@ -15,8 +15,8 @@
   "permissions": [
     "storage",
     "unlimitedStorage",
-    "*://*.pikabu.ru/*",
-    "*://pikabu.ru/*"
+    "https://*.pikabu.ru/*",
+    "https://pikabu.ru/*",
   ],
   "description": "Allows you to tag everything",
   "background": {

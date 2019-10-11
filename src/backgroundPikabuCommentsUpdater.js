@@ -1,65 +1,58 @@
 import * as log from "./misc/log";
-import {commentNodeToData} from "./misc/pikabu";
-import {createPikabuCommentIfNotExists} from "./models/db";
+import {processSavedCommentsPage} from "./misc/pikabu";
 
 log.debug("backgroundPikabuCommentsUpdater.js");
 
-/**
- * processes saved comments page
- * @param page
- * @returns {Promise<int>} number of comments on page
- */
-async function processSavedCommentsPage(page) {
-    log.info("processSavedCommentsPage(" + page + ");");
-
-    const result = await fetch("https://pikabu.ru/saved-comments?cmd=saved_comments&page=" + page);
-    const binaryResp = (await result.arrayBuffer());
-    const decoder = new TextDecoder("windows-1251");
-    const html = decoder.decode(binaryResp);
-    const dom = (new DOMParser()).parseFromString(html, "text/html");
-    const comments = dom.querySelectorAll('.page-comments[data-role="saved"] .comments__main .comment');
-    log.debug("page " + page + " has " + comments.length + " comments");
-
-    for (const comment of comments) {
-        const commentData = commentNodeToData(comment);
-
-        let saveButton = comment.querySelector('.comment__body .comment__tool[data-role="save"]');
-
-        const isSavedOnPikabu = saveButton.classList.contains("comment__tool_active");
-        if (isSavedOnPikabu) {
-            const wasSaved = await createPikabuCommentIfNotExists(
-                commentData.id,
-                commentData.commentLink,
-                commentData.storyId,
-                commentData.authorUsername,
-                commentData.createdAtDate,
-                commentData.contentHTML,
-                commentData.contentText,
-                commentData.contentImages,
-            );
-
-            if (wasSaved) {
-                log.info("comment " + commentData.id + " saved successfully");
-            } else {
-                log.info("comment " + commentData.id + " already existed");
-            }
-        }
-    }
-
-    return comments.length;
-}
-
 async function main() {
     try {
+        if (/Chrome/.test(window.navigator.userAgent)) {
+            // TODO: remove this workaround in version 79 https://bugs.chromium.org/p/chromium/issues/detail?id=617198
+            // if we're in chrome
+            // allow putting pikabu in frame
+            window.browser.webRequest.onHeadersReceived.addListener(
+                e => {
+                    let cspFound = false;
+
+                    for (let header of e.responseHeaders) {
+                        if (header.name.toLowerCase() === "content-security-policy") {
+                            header.value += "; frame-ancestors " + window.browser.extension.getURL('');
+                            cspFound = true;
+                            break;
+                        }
+                    }
+
+                    if (!cspFound) {
+                        e.responseHeaders.push({
+                            name: "content-security-policy",
+                            value: "; frame-ancestors " + window.browser.extension.getURL(''),
+                        });
+                    }
+
+                    return {responseHeaders: e.responseHeaders};
+                },
+                {
+                    urls: ["https://pikabu.ru/*"],
+                },
+                ["blocking", "responseHeaders"],
+            );
+
+
+            log.debug("We're in Chrome");
+            // doesn't work for some reason
+            // let pikabuFrame = document.createElement("iframe");
+            // pikabuFrame.src = "https://pikabu.ru/information/contacts#special_url_for_tagit_iengekou1Chai4Ese1EPei9seehee0oe";
+            // document.body.appendChild(pikabuFrame);
+            return;
+        }
+
         for (let i = 1; i < 999; ++i) {
-            const numberOfSavedComments = await processSavedCommentsPage(i);
+            const numberOfSavedComments = await processSavedCommentsPage(i, false);
             if (numberOfSavedComments === 0) {
                 return;
             }
         }
     } catch (e) {
         log.error(e);
-        console.log(e);
         throw e;
     }
 }
