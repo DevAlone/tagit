@@ -5,7 +5,7 @@ Tagit is an extension which allows you to organize content in the WEB using tags
 # How to just use it
 
 - Install on Firefox - https://addons.mozilla.org/en-US/firefox/addon/tagit/
-- Install on Chrome -  coming soon...
+- Install on Chrome -  https://chrome.google.com/webstore/detail/tagit/bomlmlmdlieoidkcnppnekdofpjljoch
 
 # How to debug locally
 
@@ -13,16 +13,16 @@ Tagit is an extension which allows you to organize content in the WEB using tags
 1. Clone this repository
 2. install dependencies 
 `npm install`
-3. run watch.sh
+3. Run watch.sh
 `./watch.sh`
-4. load `./build/manifest.json` using your favorite browser(Firefox or Chrome)
+4. Load `./build/manifest.json` using your favorite browser(Firefox or Chrome)
 
 # How to build a production version
 
 1. Clone this repository
-2. install dependencies 
+2. Install dependencies 
 `npm install`
-3. build
+3. Build
 `./build.sh`
 
 It will generate next files and directories:
