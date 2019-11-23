@@ -132,7 +132,7 @@ async function hideLastTaggedCommentIfNecessary() {
 async function closePikabuSaveButtonDialog() {
     log.debug("closing pikabu save button dialog");
     try {
-        pikabuSaveButtonDialog.style.visibility = "hidden";
+        pikabuSaveButtonDialog.style.display = "none";
         document.removeEventListener("click", closePikabuSaveButtonDialogEvent);
         await hideLastTaggedCommentIfNecessary();
     } catch (e) {
@@ -197,7 +197,7 @@ async function addTagButton(comment) {
                 commentData: commentData,
             }, () => {
                 let popup = document.getElementById("tagit__pikabuSaveButtonDialog");
-                popup.style.visibility = "visible";
+                popup.style.display = "block";
                 popup.style.left = e.pageX + "px";
                 popup.style.top = e.pageY + "px";
                 document.getElementById("tagit__pikabuSaveCommentPopupInput").focus();

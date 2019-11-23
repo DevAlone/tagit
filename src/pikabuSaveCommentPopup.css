@@ -1,6 +1,6 @@
 #tagit__pikabuSaveButtonDialog {
     position: absolute;
-    visibility: hidden;
+	display: none;
     z-index: 1048576;
 }
 
